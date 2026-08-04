@@ -58,7 +58,7 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
 
   const conversaoTopContribuintes = contribuiram.slice(0, 8).map((c) => ({
     nome: c.nome.split(' ')[0],
-    taxa: c.conversaoAssinadosProtocolados,
+    taxa: c.conversaoRecebidosAssinados,
   }));
 
   // Portal direto pro <body>: o <main> do layout usa animate-fade-in (transform),
@@ -179,13 +179,13 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
               </div>
 
               <div className="mb-4">
-                <p className="text-[12px] font-medium text-slate-500 mb-2">Taxa de protocolados — top contribuintes</p>
+                <p className="text-[12px] font-medium text-slate-500 mb-2">Taxa de assinados — top contribuintes</p>
                 <ResponsiveContainer width="100%" height={140}>
                   <LineChart data={conversaoTopContribuintes} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="nome" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={32} unit="%" />
-                    <Tooltip formatter={(v) => [`${Number(v).toFixed(0)}%`, 'Taxa de protocolados']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                    <Tooltip formatter={(v) => [`${Number(v).toFixed(0)}%`, 'Taxa de assinados']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
                     <Line type="monotone" dataKey="taxa" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>
