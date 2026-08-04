@@ -108,8 +108,8 @@ export function CollaboratorCard({
               titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador."
               value={formatNumero(c.recebidos)}
             />
-            <MetricRow icon={Gauge} cor="#4F7CFF" label="Média/Dia" titulo="Assinados por dia útil no período." value={`${mediaDia.toFixed(1)} assinados/dia`} />
-            <MetricRow icon={FileSignature} cor="#4F7CFF" label="Assinados">
+            <MetricRow icon={Gauge} cor="#22C55E" label="Média/Dia" titulo="Assinados por dia útil no período." value={`${mediaDia.toFixed(1)} assinados/dia`} />
+            <MetricRow icon={FileSignature} cor="#22C55E" label="Assinados">
               <QuadradosRitmo
                 label="Assinados"
                 valorMes={c.assinados}
@@ -131,7 +131,7 @@ export function CollaboratorCard({
             </MetricRow>
             <MetricRow
               icon={Percent}
-              cor="#8B5CF6"
+              cor="#22C55E"
               label="Conversão"
               titulo="Percentual de leads recebidos que viraram contrato assinado."
               value={formatPct(c.conversaoRecebidosAssinados, 1)}
