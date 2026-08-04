@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Sparkles } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { estaDeFerias } from '@/lib/colaboradoresEmFerias';
+import { ehSupervisor } from '@/lib/colaboradoresAtivos';
 import { useAuth } from '@/context/AuthContext';
 import { listarDiasEntre } from '@/lib/period';
 import { fetchAssinadosDiarioTodos } from '@/lib/assinadosDiarioColaborador';
@@ -35,9 +36,13 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
   // Só quem realmente produz E ainda está ativo entra no plano de ação — ex-funcionário
   // não recebe plano de ação, mas os assinados dele continuam contando nos totais da empresa
   // (Visão Geral). Cargo é lista positiva (Discador/Discadora/Judit) em vez de excluir só
-  // "supervisor", pra não deixar passar variante administrativa nenhuma.
+  // "supervisor", pra não deixar passar variante administrativa nenhuma — mas o texto do
+  // cargo sozinho não basta (supervisor pode vir com "Discadora" igual todo mundo no banco),
+  // por isso também checa pelo nome, igual Ranking/Equipe/Visão Geral já fazem.
   const cargosProducao = new Set(['discador', 'discadora', 'judit']);
-  const comProducao = colaboradores.filter((c) => c.ativo && cargosProducao.has(c.cargo.trim().toLowerCase()) && !estaDeFerias(c.nome));
+  const comProducao = colaboradores.filter(
+    (c) => c.ativo && cargosProducao.has(c.cargo.trim().toLowerCase()) && !ehSupervisor(c.nome) && !estaDeFerias(c.nome),
+  );
 
   // Sparklines dos últimos 7 dias reais — uma única consulta pra equipe inteira, não uma por
   // card exibido, pra não multiplicar chamada ao banco por 10-40 colaboradores na tela.
