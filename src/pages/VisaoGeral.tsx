@@ -164,7 +164,7 @@ export default function VisaoGeral() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 mb-6">
         <Card className="xl:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-slate-700">Desempenho da Equipe</h3>
@@ -172,7 +172,7 @@ export default function VisaoGeral() {
           <RadarConversaoLigacoes colaboradores={colaboradoresAtivos} />
         </Card>
 
-        <Card>
+        <Card className="xl:col-span-3">
           <FunilChart etapas={funil} />
         </Card>
       </div>
