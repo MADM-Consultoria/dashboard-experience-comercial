@@ -209,7 +209,7 @@ function ListaSupervisores({
     const assinados = time.reduce((a, c) => a + c.assinados, 0);
     const protocolados = time.reduce((a, c) => a + c.protocolados, 0);
     const vendaGanha = time.reduce((a, c) => a + c.vendaGanha, 0);
-    const taxaConversao = assinados ? (protocolados / assinados) * 100 : 0;
+    const taxaConversao = recebidos ? (assinados / recebidos) * 100 : 0;
     const serieDiaria = dias30.map((dia) => diarioPorTime.get(nome)?.get(dia) ?? 0);
     return { nome, pessoas: time.length, recebidos, assinados, protocolados, vendaGanha, taxaConversao, serieDiaria, cor: CORES_TIME[indice % CORES_TIME.length] };
   });
