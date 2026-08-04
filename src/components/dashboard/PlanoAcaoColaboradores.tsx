@@ -32,6 +32,7 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
   const { sessao } = useAuth();
   const [filtroStatus, setFiltroStatus] = useState<NivelStatus | null>(null);
   const [seriesPorConsultor, setSeriesPorConsultor] = useState<Map<string, number[]>>(new Map());
+  const [diasSerie, setDiasSerie] = useState<string[]>([]);
 
   // Só quem realmente produz E ainda está ativo entra no plano de ação — ex-funcionário
   // não recebe plano de ação, mas os assinados dele continuam contando nos totais da empresa
@@ -62,6 +63,7 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
           series.set(chave, dias.map((d) => porDia.get(d) ?? 0));
         }
         setSeriesPorConsultor(series);
+        setDiasSerie(dias);
       })
       .catch(() => {
         if (!cancelado) setSeriesPorConsultor(new Map());
@@ -164,6 +166,7 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
               media={media}
               diasUteisPeriodo={diasUteisPeriodo}
               serieUltimosDias={seriesPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
+              diasSerie={diasSerie}
               indice={indice}
             />
           ))}

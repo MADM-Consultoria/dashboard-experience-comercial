@@ -10,18 +10,20 @@ interface PerformanceBarProps {
   referencia?: number;
   referenciaLabel?: string;
   cor?: string;
+  /** Explicação da métrica em texto simples — vira tooltip nativo ao passar o cursor. */
+  titulo?: string;
 }
 
 /** Barra horizontal com transição animada de largura — usada nas métricas com comparação real
  * (Média/Dia, Assinados, Protocolados, Conversão). Sem `referencia`, vira só um indicador do
  * valor atual. */
-export function PerformanceBar({ label, valor, valorLabel, referencia, referenciaLabel, cor = '#4F7CFF' }: PerformanceBarProps) {
+export function PerformanceBar({ label, valor, valorLabel, referencia, referenciaLabel, cor = '#4F7CFF', titulo }: PerformanceBarProps) {
   const temReferencia = typeof referencia === 'number';
   const pct = temReferencia ? (referencia! > 0 ? Math.min(100, (valor / referencia!) * 100) : valor > 0 ? 100 : 0) : 100;
   const acimaDaReferencia = temReferencia && referencia! > 0 && valor >= referencia!;
 
   return (
-    <div>
+    <div title={titulo}>
       <div className="flex items-center justify-between text-[11px] mb-1">
         <span className="text-slate-500">{label}</span>
         <span className="font-semibold text-slate-700">

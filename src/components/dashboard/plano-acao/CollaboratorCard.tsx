@@ -15,10 +15,11 @@ interface CollaboratorCardProps {
   media: MediaEquipe;
   diasUteisPeriodo: number;
   serieUltimosDias: number[];
+  diasSerie: string[];
   indice: number;
 }
 
-export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, serieUltimosDias, indice }: CollaboratorCardProps) {
+export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, serieUltimosDias, diasSerie, indice }: CollaboratorCardProps) {
   const [aberto, setAberto] = useState(false);
   const { score, banda } = calcularScoreInteligente(c, media, diasUteisPeriodo);
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
@@ -40,12 +41,18 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
           <p className="text-sm font-semibold text-slate-900 truncate">{c.nome}</p>
           <p className="text-[12px] text-slate-500 truncate">{c.time} · {formatCargo(c.cargo)}</p>
         </div>
-        <ScoreCircle score={score} banda={banda} size={40} />
+        <div title="Score Inteligente: pondera Conversão (40%), Protocolados (25%), Assinados (20%) e Média/Dia (15%) frente à equipe.">
+          <ScoreCircle score={score} banda={banda} size={40} />
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-2">
         <StatusPill status={banda} />
-        <span className="text-[10px] font-medium flex items-center gap-0.5" style={{ color: corTendencia }}>
+        <span
+          className="text-[10px] font-medium flex items-center gap-0.5"
+          style={{ color: corTendencia }}
+          title="Compara a 1ª metade com a 2ª metade dos assinados dos últimos 7 dias."
+        >
           <IconeTendencia size={10} /> {tendencia === 'subindo' ? 'Em alta' : tendencia === 'caindo' ? 'Em queda' : 'Estável'}
         </span>
       </div>
@@ -63,17 +70,17 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
           {/* Métricas com barra de comparação — Recebidos não tem meta/média real (depende só
              da distribuição de leads, não do colaborador), por isso é só o valor, sem referência. */}
           <div className="space-y-2.5">
-            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#4F7CFF" />
-            <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} referencia={media.mediaDia} referenciaLabel={`${media.mediaDia.toFixed(1)} méd. equipe`} cor="#4F7CFF" />
-            <PerformanceBar label="Assinados" valor={c.assinados} valorLabel={formatNumero(c.assinados)} referencia={c.metaMensal} referenciaLabel={c.metaMensal > 0 ? `${formatNumero(c.metaMensal)} meta` : 'sem meta'} cor="#4F7CFF" />
-            <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#4F7CFF" />
-            <PerformanceBar label="Conversão (Recebidos → Assinados)" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" />
+            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#4F7CFF" titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador." />
+            <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} referencia={media.mediaDia} referenciaLabel={`${media.mediaDia.toFixed(1)} méd. equipe`} cor="#4F7CFF" titulo="Assinados por dia útil no período, comparado com a média da equipe." />
+            <PerformanceBar label="Assinados" valor={c.assinados} valorLabel={formatNumero(c.assinados)} referencia={c.metaMensal} referenciaLabel={c.metaMensal > 0 ? `${formatNumero(c.metaMensal)} meta` : 'sem meta'} cor="#4F7CFF" titulo="Contratos assinados no período, comparado com a meta mensal real do colaborador." />
+            <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#4F7CFF" titulo="Assinados que já foram protocolados, comparado com a média da equipe." />
+            <PerformanceBar label="Conversão (Recebidos → Assinados)" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado, comparado com a média da equipe." />
           </div>
 
-          {/* Tendência dos últimos 7 dias */}
+          {/* Tendência dos últimos 7 dias — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <p className="text-[10px] text-slate-500 mb-1">7 dias</p>
-            <Sparkline serie={serieUltimosDias} tendencia={tendencia} />
+            <p className="text-[10px] text-slate-500 mb-1">7 dias · assinados por dia (passe o cursor pra ver os valores)</p>
+            <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />
           </div>
         </div>
       )}
