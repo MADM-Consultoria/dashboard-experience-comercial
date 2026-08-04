@@ -1,10 +1,11 @@
 import type { ColaboradorMetricas, EtapaFunil, Gargalo, KpiEquipe } from '@/types/domain';
 
-export function calcularFunilEquipe(kpi: KpiEquipe): EtapaFunil[] {
+export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): EtapaFunil[] {
   return [
     { etapa: 'Recebidos', valor: kpi.totalRecebidos, taxaConversaoEtapaAnterior: null },
     { etapa: 'Assinados', valor: kpi.totalAssinados, taxaConversaoEtapaAnterior: kpi.taxaConversaoGeral > 0 ? (kpi.totalAssinados / (kpi.totalRecebidos || 1)) * 100 : 0 },
     { etapa: 'Protocolados', valor: kpi.totalProtocolados, taxaConversaoEtapaAnterior: (kpi.totalProtocolados / (kpi.totalAssinados || 1)) * 100 },
+    { etapa: 'Venda Ganha', valor: totalVendaGanha, taxaConversaoEtapaAnterior: (totalVendaGanha / (kpi.totalProtocolados || 1)) * 100 },
   ];
 }
 

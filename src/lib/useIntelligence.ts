@@ -176,7 +176,7 @@ export function useIntelligence(periodoFixo?: { inicio: string; fim: string; lab
     kpi.colaboradorAtencao = kpiAtivos.colaboradorAtencao;
     const alertas = gerarAlertas(ativos, vendaGanhaMesAtual.porConsultor);
     const insights = gerarInsights(ativos, kpi);
-    const funil = calcularFunilEquipe(kpi);
+    const funil = calcularFunilEquipe(kpi, vendaGanhaPeriodo.totalBruto);
     const gargalos = detectarGargalos(ativos, kpi);
     return { colaboradores, kpi, alertas, insights, funil, gargalos, vendaGanhaTotal: vendaGanhaPeriodo.totalBruto };
     // eslint-disable-next-line react-hooks/exhaustive-deps

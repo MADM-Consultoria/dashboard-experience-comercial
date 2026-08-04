@@ -133,7 +133,7 @@ export interface RankingItem {
 }
 
 export interface EtapaFunil {
-  etapa: 'Recebidos' | 'Assinados' | 'Protocolados';
+  etapa: 'Recebidos' | 'Assinados' | 'Protocolados' | 'Venda Ganha';
   valor: number;
   taxaConversaoEtapaAnterior: number | null; // %
 }

@@ -173,7 +173,6 @@ export default function VisaoGeral() {
         </Card>
 
         <Card>
-          <h3 className="text-sm font-semibold text-slate-700 mb-3">Funil Comercial</h3>
           <FunilChart etapas={funil} />
         </Card>
       </div>
