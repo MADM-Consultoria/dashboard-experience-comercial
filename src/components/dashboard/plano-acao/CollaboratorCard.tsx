@@ -5,6 +5,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
 import { Sparkline } from './Sparkline';
 import { PerformanceBar } from './PerformanceBar';
+import { RecebidosDestaque } from './RecebidosDestaque';
 import { QuadradosRitmo } from './QuadradosRitmo';
 import { QuickActions } from './QuickActions';
 import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, mediaDiaColaborador, type MediaEquipe } from './score';
@@ -50,11 +51,14 @@ export function CollaboratorCard({
   })();
   const indiceHoje = diasSerie.indexOf(hojeISO);
 
+  // `?? 0`: se "hoje" está na série mas o dado daquele índice ainda não chegou (ex: fetch de
+  // protocolados terminando depois do de assinados), zero é o valor correto — não "sem dado".
+  // "Sem dado" é só quando hoje nem está no período filtrado (indiceHoje === -1).
   const numQuadradosAssinados = c.metaMensal > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaMensal / diasUteisTotaisMes)) : 0;
-  const assinadosHoje = indiceHoje >= 0 ? serieUltimosDias[indiceHoje] : undefined;
+  const assinadosHoje = indiceHoje >= 0 ? serieUltimosDias[indiceHoje] ?? 0 : undefined;
 
   const numQuadradosProtocolados = c.metaProtocolados > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaProtocolados / diasUteisTotaisMes)) : 0;
-  const protocoladosHoje = indiceHoje >= 0 ? serieProtocoladosUltimosDias[indiceHoje] : undefined;
+  const protocoladosHoje = indiceHoje >= 0 ? serieProtocoladosUltimosDias[indiceHoje] ?? 0 : undefined;
 
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
@@ -93,11 +97,15 @@ export function CollaboratorCard({
 
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
-          {/* Métricas com barra de comparação — Recebidos não tem meta/média real (depende só
-             da distribuição de leads, não do colaborador), por isso é só o valor, sem referência. */}
+          {/* Métricas com barra de comparação — Recebidos e Média/Dia não têm meta/média real
+             (dependem da distribuição de leads e dos dias úteis, não são metas que o colaborador
+             persegue), por isso viram destaque simples em vez de barra/comparação inventada. */}
           <div className="space-y-2.5">
-            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#86EFAC" titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador." />
-            <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} cor="#4F7CFF" titulo="Assinados por dia útil no período." />
+            <RecebidosDestaque valor={c.recebidos} />
+            <div title="Assinados por dia útil no período." className="flex items-center justify-between text-[11px] px-0.5">
+              <span className="text-slate-500">Média/Dia</span>
+              <span className="font-semibold text-slate-700">{mediaDia.toFixed(1)} assinados/dia</span>
+            </div>
             <QuadradosRitmo
               label="Assinados"
               valorMes={c.assinados}
