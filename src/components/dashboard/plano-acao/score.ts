@@ -1,5 +1,6 @@
 import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
+import { formatNumero, formatPct } from '@/lib/format';
 
 /** Médias reais da equipe (do grupo em produção que entra no Plano de Ação) — usadas só
  * internamente pro Score Inteligente e pra "IA Recomenda" (Protocolados, Média/Dia). Recebidos
@@ -74,31 +75,69 @@ export function calcularTendenciaSerie(serie: number[]): 'subindo' | 'caindo' | 
 }
 
 /**
- * "IA Recomenda" — motor de regras 100% baseado em dados reais do colaborador, nunca texto
- * genérico solto. Mais de uma recomendação pode se aplicar ao mesmo tempo.
+ * "IA Recomenda" — motor de regras 100% baseado em dados reais do colaborador, sempre citando
+ * os números concretos do caso (nunca uma frase genérica que sirva pra qualquer um) e uma ação
+ * que já nasce ligada a esse número. Mais de uma recomendação pode se aplicar ao mesmo tempo;
+ * a mais crítica primeiro, pra aparecer resumida no topo do card.
  */
-export function gerarRecomendacoesIA(c: ColaboradorReal, media: MediaEquipe, diasUteisPeriodo: number, tendencia: 'subindo' | 'caindo' | 'estavel', banda: NivelStatus): string[] {
+export function gerarRecomendacoesIA(
+  c: ColaboradorReal,
+  media: MediaEquipe,
+  diasUteisPeriodo: number,
+  tendencia: 'subindo' | 'caindo' | 'estavel',
+  banda: NivelStatus,
+  score: number,
+  serie: number[],
+): string[] {
   const recomendacoes: string[] = [];
+  const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
+
+  if (c.assinados > 0 && c.protocolados === 0) {
+    recomendacoes.push(
+      `${formatNumero(c.assinados)} contrato${c.assinados === 1 ? '' : 's'} assinado${c.assinados === 1 ? '' : 's'} e nenhum protocolado ainda. Separar um horário hoje só pra protocolar esses casos antes de captar mais leads.`,
+    );
+  } else if (media.protocolados > 0 && c.protocolados > 0 && c.protocolados < media.protocolados * 0.5) {
+    recomendacoes.push(
+      `Protocolou ${formatNumero(c.protocolados)}, menos da metade da média da equipe (${media.protocolados.toFixed(1)}). Checar com o colaborador o que está travando o fechamento dos casos já assinados.`,
+    );
+  }
 
   if (c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5) {
-    recomendacoes.push('Conversão de Recebidos para Assinados muito abaixo do esperado. Revisar abordagem comercial.');
+    recomendacoes.push(
+      `Converteu só ${formatPct(c.conversaoRecebidosAssinados, 1)} dos ${formatNumero(c.recebidos)} recebidos em assinados (${formatNumero(c.assinados)} no total) — abaixo do mínimo saudável de 5%. Revisar a abordagem comercial nos leads que já tem em mãos antes de pedir mais volume.`,
+    );
   }
-  if (c.assinados > 0 && c.protocolados === 0) {
-    recomendacoes.push('Possui assinaturas sem protocolo. Priorizar os protocolos pendentes.');
-  }
-  const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
+
   if (media.mediaDia > 0 && mediaDia < media.mediaDia * 0.7) {
-    recomendacoes.push('Recebendo poucos leads por dia em relação à equipe. Avaliar redistribuição da carteira.');
+    const percentAbaixo = Math.round(100 - (mediaDia / media.mediaDia) * 100);
+    recomendacoes.push(
+      `Ritmo de ${mediaDia.toFixed(1)} assinados/dia, ${percentAbaixo}% abaixo da média da equipe (${media.mediaDia.toFixed(1)}/dia). Avaliar se falta volume de leads na carteira ou se é abordagem — conversar antes do fim da semana.`,
+    );
   }
-  if (tendencia === 'caindo') {
-    recomendacoes.push('Desempenho em queda nos últimos dias. Fazer acompanhamento individual.');
+
+  if (tendencia === 'caindo' && serie.length >= 2) {
+    const meio = Math.floor(serie.length / 2);
+    const antes = serie.slice(0, meio).reduce((a, b) => a + b, 0);
+    const depois = serie.slice(meio).reduce((a, b) => a + b, 0);
+    recomendacoes.push(
+      `Caiu de ${antes} para ${depois} assinados entre a 1ª e a 2ª metade do mês. Fazer um acompanhamento individual essa semana pra entender o motivo antes que vire uma tendência maior.`,
+    );
   }
+
+  if (c.metaMensal > 0 && c.atingimentoMetaMensal < 50) {
+    recomendacoes.push(
+      `Bateu só ${formatPct(c.atingimentoMetaMensal, 0)} da meta mensal (${formatNumero(c.assinados)} de ${formatNumero(c.metaMensal)}). Definir com o colaborador um plano de recuperação com metas semanais menores.`,
+    );
+  }
+
   if (banda === 'excelente') {
-    recomendacoes.push('Desempenho excelente — reconhecer publicamente e compartilhar boas práticas com a equipe.');
+    recomendacoes.push(
+      `Score ${score}, ${formatPct(c.conversaoRecebidosAssinados, 1)} de conversão e ${formatNumero(c.assinados)} assinados no período — desempenho de destaque. Reconhecer publicamente e usar como exemplo de abordagem com a equipe.`,
+    );
   }
 
   if (recomendacoes.length === 0) {
-    recomendacoes.push('Sem pontos críticos no momento — manter o acompanhamento de rotina.');
+    recomendacoes.push(`Score ${score}, sem pontos críticos no momento — manter o acompanhamento de rotina.`);
   }
   return recomendacoes;
 }

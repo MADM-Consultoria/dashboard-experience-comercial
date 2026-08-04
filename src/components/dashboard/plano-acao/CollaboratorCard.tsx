@@ -35,7 +35,7 @@ export function CollaboratorCard({
   const [aberto, setAberto] = useState(false);
   const { score, banda } = calcularScoreInteligente(c, media, diasUteisPeriodo);
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
-  const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda);
+  const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda, score, serieUltimosDias);
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
 
   // Ritmo de hoje (quadradinhos): meta diária = meta mensal ÷ dias úteis do MÊS INTEIRO (não do
@@ -76,15 +76,11 @@ export function CollaboratorCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
+      {/* Só o status aqui — misturar com a tendência ("Bom" de um lado, "Em queda" do outro)
+         confundia quem bate o olho rápido sem saber qual dos dois vale. A tendência aparece
+         só depois de expandir, junto do gráfico que a explica. */}
+      <div className="flex items-center">
         <StatusPill status={banda} />
-        <span
-          className="text-[10px] font-medium flex items-center gap-0.5"
-          style={{ color: corTendencia }}
-          title="Compara a 1ª metade com a 2ª metade dos assinados dos últimos 7 dias."
-        >
-          <IconeTendencia size={10} /> {tendencia === 'subindo' ? 'Em alta' : tendencia === 'caindo' ? 'Em queda' : 'Estável'}
-        </span>
       </div>
 
       {/* Resumo do problema — só a recomendação mais relevante, sem precisar expandir pra saber o que fazer */}
@@ -123,7 +119,16 @@ export function CollaboratorCard({
 
           {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <p className="text-[10px] text-slate-500 mb-1">Assinados por dia no mês (passe o cursor pra ver os valores)</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] text-slate-500">Assinados por dia no mês (passe o cursor pra ver os valores)</p>
+              <span
+                className="text-[10px] font-medium flex items-center gap-0.5 shrink-0 ml-2"
+                style={{ color: corTendencia }}
+                title="Compara a 1ª metade com a 2ª metade dos assinados dos últimos 7 dias com dado."
+              >
+                <IconeTendencia size={10} /> {tendencia === 'subindo' ? 'Em alta' : tendencia === 'caindo' ? 'Em queda' : 'Estável'}
+              </span>
+            </div>
             <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />
           </div>
         </div>
