@@ -48,6 +48,7 @@ export interface ColaboradorReal extends ColaboradorMetricas {
   tmaSeg: number;
   vendaGanha: number;
   vendaPerdida: number;
+  metaProtocolados: number;
 }
 
 function parseNumero(valor: string | number | null | undefined): number {
@@ -173,6 +174,7 @@ export function mapRowParaColaborador(row: RelatorioJuditRow): ColaboradorReal {
     tmaSeg: parseNumero(row['TMA (seg)']),
     vendaGanha: parseNumero(row['Venda Ganha']),
     vendaPerdida: parseNumero(row['Venda Perdida']),
+    metaProtocolados: parseNumero(row['Meta Protocolados']),
   };
 }
 
@@ -212,5 +214,6 @@ export function criarColaboradorSintetico(ativo: ColaboradorAtivo): ColaboradorR
     tmaSeg: 0,
     vendaGanha: 0,
     vendaPerdida: 0,
+    metaProtocolados: 0,
   };
 }

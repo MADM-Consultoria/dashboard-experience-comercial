@@ -7,6 +7,7 @@ import { ehSupervisor } from '@/lib/colaboradoresAtivos';
 import { useAuth } from '@/context/AuthContext';
 import { getMesCompletoDoCalendario, listarDiasEntre } from '@/lib/period';
 import { fetchAssinadosDiarioTodos } from '@/lib/assinadosDiarioColaborador';
+import { fetchProtocoladosDiarioTodos } from '@/lib/protocoladosDiarioColaborador';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { NivelStatus } from '@/types/domain';
@@ -37,6 +38,7 @@ export function PlanoAcaoColaboradores({
   const { sessao } = useAuth();
   const [filtroStatus, setFiltroStatus] = useState<NivelStatus | null>(null);
   const [seriesPorConsultor, setSeriesPorConsultor] = useState<Map<string, number[]>>(new Map());
+  const [seriesProtocoladosPorConsultor, setSeriesProtocoladosPorConsultor] = useState<Map<string, number[]>>(new Map());
   const [diasSerie, setDiasSerie] = useState<string[]>([]);
 
   // Só quem realmente produz E ainda está ativo entra no plano de ação — ex-funcionário
@@ -50,30 +52,44 @@ export function PlanoAcaoColaboradores({
     (c) => c.ativo && cargosProducao.has(c.cargo.trim().toLowerCase()) && !ehSupervisor(c.nome) && !estaDeFerias(c.nome),
   );
 
-  // Sparklines do mês inteiro do período filtrado (dia 1 ao último dia) — uma única consulta
-  // pra equipe inteira, não uma por card exibido, pra não multiplicar chamada ao banco por
-  // 10-40 colaboradores na tela.
+  // Sparklines e ritmo diário do mês inteiro do período filtrado (dia 1 ao último dia) — uma
+  // única consulta pra equipe inteira de cada métrica, não uma por card exibido, pra não
+  // multiplicar chamada ao banco por 10-40 colaboradores na tela.
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
     const { inicio, fim } = getMesCompletoDoCalendario(inicioPeriodoSelecionado);
+    const dias = listarDiasEntre(inicio, fim);
+
+    function montarSeries(porConsultor: Map<string, { dia: string; total: number }[]>) {
+      const series = new Map<string, number[]>();
+      for (const c of comProducao) {
+        const chave = normalizarNome(c.nome);
+        const linhas = porConsultor.get(chave) ?? [];
+        const porDia = new Map(linhas.map((l) => [l.dia, l.total]));
+        series.set(chave, dias.map((d) => porDia.get(d) ?? 0));
+      }
+      return series;
+    }
+
     fetchAssinadosDiarioTodos(sessao.token, inicio, fim)
       .then((porConsultor) => {
         if (cancelado) return;
-        const dias = listarDiasEntre(inicio, fim);
-        const series = new Map<string, number[]>();
-        for (const c of comProducao) {
-          const chave = normalizarNome(c.nome);
-          const linhas = porConsultor.get(chave) ?? [];
-          const porDia = new Map(linhas.map((l) => [l.dia, l.total]));
-          series.set(chave, dias.map((d) => porDia.get(d) ?? 0));
-        }
-        setSeriesPorConsultor(series);
+        setSeriesPorConsultor(montarSeries(porConsultor));
         setDiasSerie(dias);
       })
       .catch(() => {
         if (!cancelado) setSeriesPorConsultor(new Map());
       });
+
+    fetchProtocoladosDiarioTodos(sessao.token, inicio, fim)
+      .then((porConsultor) => {
+        if (!cancelado) setSeriesProtocoladosPorConsultor(montarSeries(porConsultor));
+      })
+      .catch(() => {
+        if (!cancelado) setSeriesProtocoladosPorConsultor(new Map());
+      });
+
     return () => {
       cancelado = true;
     };
@@ -154,6 +170,7 @@ export function PlanoAcaoColaboradores({
               diasUteisPeriodo={diasUteisPeriodo}
               diasUteisTotaisMes={diasUteisTotaisMes}
               serieUltimosDias={seriesPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
+              serieProtocoladosUltimosDias={seriesProtocoladosPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
               diasSerie={diasSerie}
               indice={indice}
             />
