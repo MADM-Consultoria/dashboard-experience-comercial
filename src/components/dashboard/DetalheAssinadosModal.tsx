@@ -89,14 +89,21 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-[12px] font-medium text-slate-500 mb-2">Top contribuintes</p>
-                  <ResponsiveContainer width="100%" height={Math.max(140, topContribuintes.length * 28)}>
-                    <BarChart data={topContribuintes} layout="vertical" margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
-                      <XAxis type="number" hide />
-                      <YAxis type="category" dataKey="nome" tick={{ fontSize: 11, fill: '#475569' }} width={100} tickLine={false} axisLine={false} />
-                      <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Assinados']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                      <Bar dataKey="assinados" fill="#2563eb" radius={[0, 4, 4, 0]} barSize={14} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <div className="space-y-2">
+                    {topContribuintes.map((c) => {
+                      const maiorValor = topContribuintes[0]?.assinados || 1;
+                      const pct = Math.max(6, (c.assinados / maiorValor) * 100);
+                      return (
+                        <div key={c.nome} className="flex items-center gap-2">
+                          <span className="w-20 shrink-0 text-[11px] text-slate-500 truncate" title={c.nome}>{c.nome}</span>
+                          <div className="flex-1 h-4 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+                            <div className="h-full rounded-full bg-blue-600 transition-all duration-500" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="w-6 shrink-0 text-right text-[11px] font-semibold text-slate-700 dark:text-slate-300">{formatNumero(c.assinados)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {porTime.length > 1 && (
