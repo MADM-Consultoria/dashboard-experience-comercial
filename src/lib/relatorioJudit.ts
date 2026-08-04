@@ -67,9 +67,43 @@ export function slug(nome: string): string {
     .replace(/(^-|-$)/g, '');
 }
 
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const CHAVE_CACHE = 'madm-ops-cache-relatorio-judit';
+
+interface CacheRelatorioSerializado {
+  dados: RelatorioJuditRow[];
+  expiraEm: number;
+}
+
+function lerCacheRelatorio(): RelatorioJuditRow[] | null {
+  try {
+    const bruto = sessionStorage.getItem(CHAVE_CACHE);
+    if (!bruto) return null;
+    const entrada = JSON.parse(bruto) as CacheRelatorioSerializado;
+    if (typeof entrada.expiraEm !== 'number' || entrada.expiraEm < Date.now()) return null;
+    return entrada.dados;
+  } catch {
+    return null;
+  }
+}
+
+function salvarCacheRelatorio(dados: RelatorioJuditRow[]) {
+  try {
+    const entrada: CacheRelatorioSerializado = { dados, expiraEm: Date.now() + CACHE_TTL_MS };
+    sessionStorage.setItem(CHAVE_CACHE, JSON.stringify(entrada));
+  } catch {
+    // não é crítico se não conseguir salvar (modo privado etc.)
+  }
+}
+
 /** Tenta de novo antes de desistir — pico passageiro de conexão no banco não pode virar
- * tela de erro se uma segunda tentativa alguns segundos depois resolveria sozinha. */
+ * tela de erro se uma segunda tentativa alguns segundos depois resolveria sozinha.
+ * Cache persistido em sessionStorage (5 min) pra F5/reload não bater no banco de novo,
+ * seguindo o mesmo padrão de src/lib/assinadosPeriodo.ts. */
 export async function fetchRelatorioJudit(token: string): Promise<RelatorioJuditRow[]> {
+  const emCache = lerCacheRelatorio();
+  if (emCache) return emCache;
+
   let ultimoErro: unknown;
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
@@ -77,7 +111,10 @@ export async function fetchRelatorioJudit(token: string): Promise<RelatorioJudit
         headers: { Authorization: `Bearer ${token}` },
       });
       const dados = await resposta.json();
-      if (resposta.ok && dados.ok) return dados.dados as RelatorioJuditRow[];
+      if (resposta.ok && dados.ok) {
+        salvarCacheRelatorio(dados.dados as RelatorioJuditRow[]);
+        return dados.dados as RelatorioJuditRow[];
+      }
       if (resposta.status < 500 || tentativa === 3) {
         throw new Error(dados.error ?? 'Não foi possível carregar os dados do banco.');
       }

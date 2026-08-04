@@ -12,6 +12,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
  * polling de 5 em 5 minutos, só com a aba visível, é o que dá pra fazer com segurança hoje.
  */
 const INTERVALO_MS = 5 * 60 * 1000;
+const CHAVE_PROXIMA_ATUALIZACAO = 'madm-ops-proxima-atualizacao';
 
 interface AutoRefreshContextValue {
   tick: number;
@@ -20,10 +21,37 @@ interface AutoRefreshContextValue {
 
 const AutoRefreshContext = createContext<AutoRefreshContextValue | null>(null);
 
+/** Lê o horário da próxima atualização salvo no sessionStorage — se um F5 acontecer no meio
+ * do caminho, o contador continua de onde estava em vez de reiniciar os 5 minutos do zero,
+ * o que manteria consistência com o cache de dados (também em sessionStorage) que só expira
+ * nesse mesmo horário. */
+function lerOuCriarProximaAtualizacao(): number {
+  try {
+    const salvo = sessionStorage.getItem(CHAVE_PROXIMA_ATUALIZACAO);
+    if (salvo) {
+      const numero = Number(salvo);
+      if (Number.isFinite(numero) && numero > Date.now()) return numero;
+    }
+  } catch {
+    // sessionStorage indisponível — segue com um novo prazo em memória.
+  }
+  const nova = Date.now() + INTERVALO_MS;
+  try {
+    sessionStorage.setItem(CHAVE_PROXIMA_ATUALIZACAO, String(nova));
+  } catch {}
+  return nova;
+}
+
+function salvarProximaAtualizacao(valor: number) {
+  try {
+    sessionStorage.setItem(CHAVE_PROXIMA_ATUALIZACAO, String(valor));
+  } catch {}
+}
+
 export function AutoRefreshProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0);
-  const [proximaEm, setProximaEm] = useState(() => Date.now() + INTERVALO_MS);
-  const [segundosRestantes, setSegundosRestantes] = useState(INTERVALO_MS / 1000);
+  const [proximaEm, setProximaEm] = useState(lerOuCriarProximaAtualizacao);
+  const [segundosRestantes, setSegundosRestantes] = useState(() => Math.max(0, Math.ceil((proximaEm - Date.now()) / 1000)));
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -39,7 +67,9 @@ export function AutoRefreshProvider({ children }: { children: ReactNode }) {
         return;
       }
       setTick((t) => t + 1);
-      setProximaEm(Date.now() + INTERVALO_MS);
+      const proxima = Date.now() + INTERVALO_MS;
+      setProximaEm(proxima);
+      salvarProximaAtualizacao(proxima);
       setSegundosRestantes(INTERVALO_MS / 1000);
     }, 1000);
     return () => clearInterval(id);
@@ -49,7 +79,9 @@ export function AutoRefreshProvider({ children }: { children: ReactNode }) {
     function aoMudarVisibilidade() {
       if (document.visibilityState === 'visible' && Date.now() >= proximaEm) {
         setTick((t) => t + 1);
-        setProximaEm(Date.now() + INTERVALO_MS);
+        const proxima = Date.now() + INTERVALO_MS;
+        setProximaEm(proxima);
+        salvarProximaAtualizacao(proxima);
         setSegundosRestantes(INTERVALO_MS / 1000);
       }
     }

@@ -55,6 +55,21 @@ function lerContasSalvas(): ContaSalva[] {
   }
 }
 
+/** Apaga os caches de dados em sessionStorage (períodos, relatório, contador do auto-refresh)
+ * no logout — senão, num computador compartilhado, a próxima pessoa a logar nesse mesmo
+ * navegador/aba veria por até 5 min os números da sessão anterior antes do primeiro fetch real. */
+function limparCachesDeDados() {
+  const prefixos = ['madm-ops-cache-periodo-', 'madm-ops-cache-relatorio-judit', 'madm-ops-proxima-atualizacao'];
+  try {
+    const chaves = Object.keys(sessionStorage);
+    for (const chave of chaves) {
+      if (prefixos.some((p) => chave.startsWith(p) || chave === p)) sessionStorage.removeItem(chave);
+    }
+  } catch {
+    // sessionStorage indisponível — nada a limpar.
+  }
+}
+
 function salvarConta(conta: ContaSalva) {
   const atuais = lerContasSalvas().filter((c) => c.usuario !== conta.usuario);
   const novaLista = [conta, ...atuais].slice(0, 6);
@@ -137,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     sessionStorage.removeItem(STORAGE_KEY);
     limparPeriodoSalvo();
+    limparCachesDeDados();
     setSessao(null);
   }
 

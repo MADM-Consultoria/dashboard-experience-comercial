@@ -48,23 +48,52 @@ export function normalizarNome(nome: string): string {
 }
 
 /**
- * Cache em memória por endpoint+período — nenhuma das colunas de data usadas
- * aqui (data_qualificacao, data_protocolo_juridico_auditoria, data_ganho,
- * data_assinatura) tem índice no banco, então cada consulta é um Seq Scan
- * completo na tabela (~40-80ms hoje, cresce com o tamanho da tabela). Trocar
- * de tela e voltar pro mesmo período, ou reabrir o calendário na mesma data,
- * não deve gerar consulta nova. Expira em 5 min pra não mostrar dado velho
- * demais numa sessão longa.
+ * Cache persistido no `sessionStorage` (não só em memória) por endpoint+período —
+ * nenhuma das colunas de data usadas aqui (data_qualificacao, data_protocolo_juridico_auditoria,
+ * data_ganho, data_assinatura) tem índice no banco, então cada consulta é um Seq Scan completo
+ * na tabela. Trocar de tela e voltar pro mesmo período, reabrir o calendário na mesma data, OU
+ * dar F5/recarregar a página não deve gerar consulta nova — só em memória o cache se perderia
+ * a cada reload, e a pessoa apertando F5 repetido voltaria a bater no banco toda vez (foi
+ * exatamente isso que ajudou a esgotar as conexões antes). Expira em 5 min.
  */
 const CACHE_TTL_MS = 5 * 60 * 1000;
-const cache = new Map<string, { valor: ContagemPeriodo; expiraEm: number }>();
+const PREFIXO_CACHE = 'madm-ops-cache-periodo-';
+
+interface CacheEntradaSerializada {
+  totalBruto: number;
+  porConsultor: [string, number][];
+  expiraEm: number;
+}
+
+function lerCachePeriodo(chave: string): ContagemPeriodo | null {
+  try {
+    const bruto = sessionStorage.getItem(PREFIXO_CACHE + chave);
+    if (!bruto) return null;
+    const entrada = JSON.parse(bruto) as CacheEntradaSerializada;
+    if (typeof entrada.expiraEm !== 'number' || entrada.expiraEm < Date.now()) return null;
+    return { totalBruto: entrada.totalBruto, porConsultor: new Map(entrada.porConsultor) };
+  } catch {
+    return null; // sessionStorage indisponível (modo privado, etc.) — cai no fetch normal.
+  }
+}
+
+function salvarCachePeriodo(chave: string, valor: ContagemPeriodo) {
+  try {
+    const entrada: CacheEntradaSerializada = {
+      totalBruto: valor.totalBruto,
+      porConsultor: Array.from(valor.porConsultor.entries()),
+      expiraEm: Date.now() + CACHE_TTL_MS,
+    };
+    sessionStorage.setItem(PREFIXO_CACHE + chave, JSON.stringify(entrada));
+  } catch {
+    // idem — não é crítico se não conseguir salvar.
+  }
+}
 
 async function fetchContagemPeriodo(endpoint: string, token: string, inicio: string, fim: string): Promise<ContagemPeriodo> {
   const chaveCache = `${endpoint}|${inicio}|${fim}`;
-  const emCache = cache.get(chaveCache);
-  if (emCache && emCache.expiraEm > Date.now()) {
-    return emCache.valor;
-  }
+  const emCache = lerCachePeriodo(chaveCache);
+  if (emCache) return emCache;
 
   const params = new URLSearchParams({ inicio, fim });
   const { resposta, dados } = await fetchComRetry(`/.netlify/functions/${endpoint}?${params.toString()}`, token);
@@ -83,7 +112,7 @@ async function fetchContagemPeriodo(endpoint: string, token: string, inicio: str
   }
 
   const valor: ContagemPeriodo = { totalBruto, porConsultor };
-  cache.set(chaveCache, { valor, expiraEm: Date.now() + CACHE_TTL_MS });
+  salvarCachePeriodo(chaveCache, valor);
   return valor;
 }
 
@@ -107,16 +136,13 @@ export function fetchVendaGanhaPeriodo(token: string, inicio: string, fim: strin
   return fetchContagemPeriodo('venda-ganha-periodo', token, inicio, fim);
 }
 
-const cacheJudit = new Map<string, { valor: ContagemPeriodo; expiraEm: number }>();
-
 /** Mesmo formato de resposta que assinados-judit-periodo/recebidos-judit-periodo: `{ total, porConsultor }`
- * em vez de `{ dados }` — porque o `total` já vem de uma consulta independente (não soma do agrupamento). */
+ * em vez de `{ dados }` — porque o `total` já vem de uma consulta independente (não soma do agrupamento).
+ * Usa o mesmo cache persistido em sessionStorage que fetchContagemPeriodo (sobrevive a F5). */
 async function fetchContagemJuditPeriodo(endpoint: string, token: string, inicio: string, fim: string): Promise<ContagemPeriodo> {
   const chaveCache = `${endpoint}|${inicio}|${fim}`;
-  const emCache = cacheJudit.get(chaveCache);
-  if (emCache && emCache.expiraEm > Date.now()) {
-    return emCache.valor;
-  }
+  const emCache = lerCachePeriodo(chaveCache);
+  if (emCache) return emCache;
 
   const params = new URLSearchParams({ inicio, fim });
   const { resposta, dados } = await fetchComRetry(`/.netlify/functions/${endpoint}?${params.toString()}`, token);
@@ -133,7 +159,7 @@ async function fetchContagemJuditPeriodo(endpoint: string, token: string, inicio
   }
 
   const valor: ContagemPeriodo = { totalBruto: typeof dados.total === 'number' ? dados.total : Number(dados.total) || 0, porConsultor };
-  cacheJudit.set(chaveCache, { valor, expiraEm: Date.now() + CACHE_TTL_MS });
+  salvarCachePeriodo(chaveCache, valor);
   return valor;
 }
 
