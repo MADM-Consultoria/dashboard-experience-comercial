@@ -77,9 +77,9 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
             <PerformanceBar label="Conversão (Recebidos → Assinados)" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado, comparado com a média da equipe." />
           </div>
 
-          {/* Tendência dos últimos 7 dias — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
+          {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <p className="text-[10px] text-slate-500 mb-1">7 dias · assinados por dia (passe o cursor pra ver os valores)</p>
+            <p className="text-[10px] text-slate-500 mb-1">Assinados por dia no mês (passe o cursor pra ver os valores)</p>
             <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />
           </div>
         </div>

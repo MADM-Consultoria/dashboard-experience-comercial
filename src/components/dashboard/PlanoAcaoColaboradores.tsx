@@ -18,13 +18,14 @@ import { calcularMediaEquipe, calcularScoreInteligente, mediaDiaColaborador } fr
 
 const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'excelente'];
 
-function ultimos7Dias(): { inicio: string; fim: string } {
+/** Do dia 1 até hoje, sempre o mês real corrente (não o filtro do calendário do topo) — o
+ * mini-gráfico do card é sobre "como esse colaborador andou no mês", não sobre um período
+ * arbitrário que a diretoria esteja olhando em outra tela. */
+function mesAteHoje(): { inicio: string; fim: string } {
   const pad = (n: number) => String(n).padStart(2, '0');
   const hoje = new Date();
+  const inicio = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-01`;
   const fim = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
-  const inicioDate = new Date(hoje);
-  inicioDate.setDate(inicioDate.getDate() - 6);
-  const inicio = `${inicioDate.getFullYear()}-${pad(inicioDate.getMonth() + 1)}-${pad(inicioDate.getDate())}`;
   return { inicio, fim };
 }
 
@@ -45,12 +46,12 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
     (c) => c.ativo && cargosProducao.has(c.cargo.trim().toLowerCase()) && !ehSupervisor(c.nome) && !estaDeFerias(c.nome),
   );
 
-  // Sparklines dos últimos 7 dias reais — uma única consulta pra equipe inteira, não uma por
-  // card exibido, pra não multiplicar chamada ao banco por 10-40 colaboradores na tela.
+  // Sparklines do mês corrente (dia 1 até hoje) — uma única consulta pra equipe inteira, não
+  // uma por card exibido, pra não multiplicar chamada ao banco por 10-40 colaboradores na tela.
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
-    const { inicio, fim } = ultimos7Dias();
+    const { inicio, fim } = mesAteHoje();
     fetchAssinadosDiarioTodos(sessao.token, inicio, fim)
       .then((porConsultor) => {
         if (cancelado) return;
