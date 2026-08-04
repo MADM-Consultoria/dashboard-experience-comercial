@@ -17,6 +17,10 @@ const ETAPA_META: Record<EtapaFunil['etapa'], EtapaMeta> = {
   'Venda Ganha': { icon: Trophy, sublabel: 'Processos com venda ganha', de: '#F97316', para: '#EA580C' },
 };
 
+// mesmas 3 colunas em toda linha (inclusive o cabeçalho "Taxa de conversão") — é o grid, não o
+// conteúdo de cada linha, que garante que tudo fique alinhado independente do texto.
+const COLUNAS = 'grid-cols-[132px_1fr_56px]';
+
 export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
   const total = etapas[0]?.valor || 1;
   const max = etapas[0]?.valor || 1;
@@ -33,17 +37,23 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
         </div>
       </div>
 
+      <div className={`grid ${COLUNAS} items-center gap-3 mb-1.5`}>
+        <div />
+        <div />
+        <p className="text-[9px] text-slate-500 text-center leading-tight">Taxa de conversão</p>
+      </div>
+
       <div className="flex flex-col gap-3">
         {etapas.map((etapa, i) => {
           const meta = ETAPA_META[etapa.etapa];
           const Icon = meta.icon;
-          const largura = Math.max(28, (etapa.valor / max) * 100);
+          const largura = Math.max(30, (etapa.valor / max) * 100);
           const pctDoTotal = (etapa.valor / total) * 100;
           const proxima = etapas[i + 1];
 
           return (
-            <div key={etapa.etapa} className="flex items-center gap-3">
-              <div className="flex items-center gap-2.5 w-[132px] shrink-0">
+            <div key={etapa.etapa} className={`grid ${COLUNAS} items-center gap-3`}>
+              <div className="flex items-center gap-2.5 min-w-0">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${meta.de}26`, color: meta.de }}>
                   <Icon size={15} />
                 </div>
@@ -53,12 +63,11 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                 </div>
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="h-14 w-full flex items-center">
                 <div
-                  className="flex flex-col items-center justify-center py-2.5 text-white transition-all duration-500"
+                  className="flex h-full flex-col items-center justify-center text-white transition-[width] duration-500"
                   style={{
                     width: `${largura}%`,
-                    minWidth: '64px',
                     background: `linear-gradient(135deg, ${meta.de}, ${meta.para})`,
                     clipPath: 'polygon(3% 0, 97% 0, 91% 100%, 9% 100%)',
                   }}
@@ -68,11 +77,10 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                 </div>
               </div>
 
-              <div className="w-[52px] shrink-0 flex flex-col items-center">
-                {i === 0 && <span className="text-[9px] text-slate-500 mb-1 text-center leading-tight">Taxa de<br />conversão</span>}
+              <div className="flex items-center justify-center">
                 {proxima && (
                   <span
-                    className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                    className="rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap"
                     style={{ backgroundColor: `${ETAPA_META[proxima.etapa].de}26`, color: ETAPA_META[proxima.etapa].de }}
                   >
                     {formatPct(proxima.taxaConversaoEtapaAnterior ?? 0, 1)}
