@@ -64,11 +64,11 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
 
                 <div className="h-16 w-full flex items-center">
                   <div
-                    className="flex h-full flex-col items-center justify-center text-white transition-[width] duration-500 rounded-l-md"
+                    className="flex h-full flex-col items-center justify-center text-white transition-[width] duration-500"
                     style={{
                       width: `${largura}%`,
                       background: `linear-gradient(135deg, ${meta.de}, ${meta.para})`,
-                      clipPath: 'polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%)',
+                      clipPath: 'polygon(4% 0, 96% 0, 88% 100%, 12% 100%)',
                     }}
                   >
                     <span className="text-lg font-bold leading-tight">{formatNumero(etapa.valor)}</span>
