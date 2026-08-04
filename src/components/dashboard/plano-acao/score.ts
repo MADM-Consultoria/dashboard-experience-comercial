@@ -17,7 +17,9 @@ export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisP
     recebidos: colaboradores.reduce((a, c) => a + c.recebidos, 0) / n,
     protocolados: colaboradores.reduce((a, c) => a + c.protocolados, 0) / n,
     mediaDia: diasUteisPeriodo > 0 ? colaboradores.reduce((a, c) => a + c.assinados, 0) / diasUteisPeriodo / n : 0,
-    conversao: colaboradores.reduce((a, c) => a + c.conversaoAssinadosProtocolados, 0) / n,
+    // Recebidos → Assinados, a mesma conversão exibida no card — não a de Assinados →
+    // Protocolados (essa só alimenta o Score Inteligente, não é mostrada como "Conversão").
+    conversao: colaboradores.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / n,
   };
 }
 

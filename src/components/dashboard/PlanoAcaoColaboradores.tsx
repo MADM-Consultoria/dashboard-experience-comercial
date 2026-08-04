@@ -84,7 +84,7 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
     const acimaDaMeta = comProducao.filter((c) => c.metaMensal > 0 && c.atingimentoMetaMensal >= 100).length;
     const semProtocolar = comProducao.filter((c) => c.assinados > 0 && c.protocolados === 0).length;
     const conversaoBaixa = comProducao.filter((c) => c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5).length;
-    const conversaoMedia = comProducao.length ? comProducao.reduce((a, c) => a + c.conversaoAssinadosProtocolados, 0) / comProducao.length : 0;
+    const conversaoMedia = comProducao.length ? comProducao.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / comProducao.length : 0;
     const mediaDiaEquipe = comProducao.length ? comProducao.reduce((a, c) => a + mediaDiaColaborador(c, diasUteisPeriodo), 0) / comProducao.length : 0;
     const melhor = [...comScore].sort((a, b) => b.score - a.score)[0] ?? null;
     const protocolosPendentes = comProducao.reduce((a, c) => a + Math.max(0, c.assinados - c.protocolados), 0);

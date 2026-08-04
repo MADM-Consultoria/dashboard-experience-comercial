@@ -24,7 +24,6 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
   const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda);
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
-  const deltaConversao = c.conversaoAssinadosProtocolados - media.conversao;
 
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
@@ -61,45 +60,21 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
 
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
-          {/* Métricas com barra de comparação */}
+          {/* Métricas com barra de comparação — Recebidos não tem meta/média real (depende só
+             da distribuição de leads, não do colaborador), por isso é só o valor, sem referência. */}
           <div className="space-y-2.5">
-            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} referencia={media.recebidos} referenciaLabel={`${formatNumero(media.recebidos)} méd. equipe`} cor="#4F7CFF" />
+            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#4F7CFF" />
             <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} referencia={media.mediaDia} referenciaLabel={`${media.mediaDia.toFixed(1)} méd. equipe`} cor="#4F7CFF" />
             <PerformanceBar label="Assinados" valor={c.assinados} valorLabel={formatNumero(c.assinados)} referencia={c.metaMensal} referenciaLabel={c.metaMensal > 0 ? `${formatNumero(c.metaMensal)} meta` : 'sem meta'} cor="#4F7CFF" />
             <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#4F7CFF" />
-            <PerformanceBar label="Conversão" valor={c.conversaoAssinadosProtocolados} valorLabel={formatPct(c.conversaoAssinadosProtocolados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" />
+            <PerformanceBar label="Conversão (Recebidos → Assinados)" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" />
           </div>
 
-          {/* Comparação com a equipe + tendência de 7 dias */}
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex flex-col justify-center">
-              <p className="text-[10px] text-slate-500">Conversão vs. equipe</p>
-              <p className="text-[13px] font-semibold text-slate-700">{formatPct(media.conversao, 1)}</p>
-              <p className="text-[12px] font-bold flex items-center gap-0.5" style={{ color: deltaConversao >= 0 ? '#22C55E' : '#EF4444' }}>
-                {deltaConversao >= 0 ? '▲' : '▼'} {deltaConversao >= 0 ? '+' : ''}{deltaConversao.toFixed(1)}%
-              </p>
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="text-[10px] text-slate-500 mb-1">7 dias</p>
-              <Sparkline serie={serieUltimosDias} tendencia={tendencia} />
-            </div>
+          {/* Tendência dos últimos 7 dias */}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[10px] text-slate-500 mb-1">7 dias</p>
+            <Sparkline serie={serieUltimosDias} tendencia={tendencia} />
           </div>
-
-          {/* IA Recomenda — lista completa (a primeira já aparece resumida acima) */}
-          {recomendacoes.length > 1 && (
-            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 p-3">
-              <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 mb-1.5">
-                <Sparkles size={12} className="text-blue-500" /> IA Recomenda
-              </p>
-              <ul className="space-y-1">
-                {recomendacoes.slice(1).map((r, i) => (
-                  <li key={i} className="text-[12px] text-slate-600 dark:text-slate-300 leading-snug">
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       )}
 
