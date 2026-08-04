@@ -5,6 +5,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
 import { Sparkline } from './Sparkline';
 import { PerformanceBar } from './PerformanceBar';
+import { AssinadosQuadrados } from './AssinadosQuadrados';
 import { QuickActions } from './QuickActions';
 import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, mediaDiaColaborador, type MediaEquipe } from './score';
 import { formatCargo, formatNumero, formatPct } from '@/lib/format';
@@ -25,6 +26,18 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
   const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda);
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
+
+  // Ritmo de hoje (quadradinhos): meta diária = meta mensal ÷ dias úteis do período, arredondada
+  // pra cima. "Hoje" é achado pelo índice da data de hoje na série do mês — se o período
+  // filtrado não inclui hoje (ex: mês passado), não tem ritmo de hoje pra mostrar.
+  const numQuadrados = c.metaMensal > 0 && diasUteisPeriodo > 0 ? Math.max(1, Math.ceil(c.metaMensal / diasUteisPeriodo)) : 0;
+  const hojeISO = (() => {
+    const hoje = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
+  })();
+  const indiceHoje = diasSerie.indexOf(hojeISO);
+  const assinadosHoje = indiceHoje >= 0 ? serieUltimosDias[indiceHoje] : undefined;
 
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
@@ -70,10 +83,10 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
           {/* Métricas com barra de comparação — Recebidos não tem meta/média real (depende só
              da distribuição de leads, não do colaborador), por isso é só o valor, sem referência. */}
           <div className="space-y-2.5">
-            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#4F7CFF" titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador." />
+            <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#86EFAC" titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador." />
             <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} cor="#4F7CFF" titulo="Assinados por dia útil no período." />
-            <PerformanceBar label="Assinados" valor={c.assinados} valorLabel={formatNumero(c.assinados)} referencia={c.metaMensal} referenciaLabel={c.metaMensal > 0 ? `${formatNumero(c.metaMensal)} meta` : 'sem meta'} cor="#4F7CFF" titulo="Contratos assinados no período, comparado com a meta mensal real do colaborador." />
-            <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#4F7CFF" titulo="Assinados que já foram protocolados, comparado com a média da equipe." />
+            <AssinadosQuadrados valorMes={c.assinados} metaMensal={c.metaMensal} assinadosHoje={assinadosHoje} numQuadrados={numQuadrados} />
+            <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#22C55E" titulo="Assinados que já foram protocolados, comparado com a média da equipe." />
             <PerformanceBar label="Conversão" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado." />
           </div>
 
