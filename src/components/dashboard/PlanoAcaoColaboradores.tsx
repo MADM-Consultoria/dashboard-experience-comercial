@@ -11,6 +11,7 @@ import { STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 import { CollaboratorCard } from './plano-acao/CollaboratorCard';
+import { RelogioBrasilia } from './plano-acao/RelogioBrasilia';
 import { SummaryCards, type ResumoPlanoAcao } from './plano-acao/SummaryCards';
 import { calcularMediaEquipe, calcularScoreInteligente, mediaDiaColaborador } from './plano-acao/score';
 
@@ -102,9 +103,12 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
   return (
     <Card>
       <div className="mb-5">
-        <div className="flex items-center gap-2 mb-1">
-          <Sparkles size={16} className="text-blue-600" />
-          <h3 className="text-base font-semibold text-slate-900">Plano de ação por colaborador</h3>
+        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-blue-600" />
+            <h3 className="text-base font-semibold text-slate-900">Plano de ação por colaborador</h3>
+          </div>
+          <RelogioBrasilia />
         </div>
         <p className="text-[13px] text-slate-500">
           {resumo.precisamAtencao === 0
