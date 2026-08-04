@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "lib": ["ES2023"],
+    "module": "esnext",
+    "types": ["node"],
+    "skipLibCheck": true,
+
+    /* Bundler mode — mesma resolução que o esbuild do Netlify usa de verdade pra
+       empacotar essas functions, então nada de exigir extensão .js nos imports
+       relativos (isso só existe sob moduleResolution "nodenext"/"node16"). */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "noEmit": true
+  },
+  "include": ["**/*.ts"]
+}

@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-surface-2: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-faint: #94a3b8;
+
+  --color-success: #22c55e;
+  --color-info: #3b82f6;
+  --color-warning: #f59e0b;
+  --color-orange: #f97316;
+  --color-danger: #ef4444;
+
+  --color-brand: #2563eb;
+  --color-brand-2: #3b82f6;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-surface-2: #1e293b;
+  --color-border: #334155;
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
+  --color-text-faint: #64748b;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.35s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in {
+    animation: none;
+  }
+}
+
+/* Correção geral do modo escuro: a maioria dos componentes usa classes fixas
+ * de texto/fundo em tom claro (text-slate-900, bg-white, etc.), escritas antes
+ * do modo escuro existir. Em vez de reescrever cada componente, sobrescrevemos
+ * essas classes quando a página está em .dark — cobre o app inteiro de uma vez. */
+.dark .text-slate-900 { color: #f1f5f9 !important; }
+.dark .text-slate-800 { color: #e2e8f0 !important; }
+.dark .text-slate-700 { color: #cbd5e1 !important; }
+.dark .text-slate-600 { color: #94a3b8 !important; }
+.dark .text-slate-500 { color: #94a3b8 !important; }
+.dark .text-slate-400 { color: #64748b !important; }
+
+.dark .bg-white { background-color: #1e293b !important; }
+.dark .bg-white\/70 { background-color: rgba(30, 41, 59, 0.7) !important; }
+.dark .bg-slate-50 { background-color: #0f172a !important; }
+.dark .bg-slate-100 { background-color: #1e293b !important; }
+
+.dark .border-slate-100 { border-color: #1e293b !important; }
+.dark .border-slate-200 { border-color: #334155 !important; }
+.dark .border-slate-200\/60 { border-color: rgba(51, 65, 85, 0.6) !important; }
+.dark .divide-slate-100 { border-color: #1e293b !important; }
+
+.dark .hover\:bg-slate-50:hover { background-color: #1e293b !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #334155 !important; }
+.dark .hover\:text-slate-700:hover { color: #e2e8f0 !important; }
+
+/* Os overrides de border-slate-200 acima usam !important e "vencem" até os hovers
+ * coloridos dos cards (ex: brilho azul ao passar o mouse) — reforça esses hovers
+ * específicos pra continuarem funcionando no modo escuro. */
+.dark .hover\:border-blue-500\/40:hover { border-color: rgba(59, 130, 246, 0.4) !important; }
+.dark .hover\:border-blue-400\/60:hover { border-color: rgba(96, 165, 250, 0.6) !important; }
+
+/* Cards de modal (Perfil, Geral/Judit) precisam de fundo 100% opaco em qualquer
+ * tema — o bg-white/70 padrão do Card, mesmo com estilo inline, perde pro
+ * !important dos overrides acima. Esta classe dedicada vence por ser a última
+ * regra do arquivo com a mesma especificidade. */
+.modal-surface,
+.dark .modal-surface {
+  background-color: var(--color-surface) !important;
+}
