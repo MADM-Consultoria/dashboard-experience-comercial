@@ -20,9 +20,9 @@ export function RelogioBrasilia() {
   }, []);
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 px-2.5 py-1 text-[12px] font-medium text-slate-600 dark:text-slate-300 tabular-nums">
-      <Clock size={12} className="text-blue-500" />
-      {hora} <span className="text-slate-400 font-normal">· Brasília</span>
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[12px] font-semibold text-red-500 tabular-nums">
+      <Clock size={12} className="text-red-500" />
+      {hora} <span className="text-red-400/80 font-normal">· Brasília</span>
     </span>
   );
 }
