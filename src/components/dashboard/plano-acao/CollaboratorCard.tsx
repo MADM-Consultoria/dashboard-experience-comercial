@@ -71,10 +71,10 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
              da distribuição de leads, não do colaborador), por isso é só o valor, sem referência. */}
           <div className="space-y-2.5">
             <PerformanceBar label="Recebidos" valor={c.recebidos} valorLabel={formatNumero(c.recebidos)} cor="#4F7CFF" titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador." />
-            <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} referencia={media.mediaDia} referenciaLabel={`${media.mediaDia.toFixed(1)} méd. equipe`} cor="#4F7CFF" titulo="Assinados por dia útil no período, comparado com a média da equipe." />
+            <PerformanceBar label="Média/Dia" valor={mediaDia} valorLabel={mediaDia.toFixed(1)} cor="#4F7CFF" titulo="Assinados por dia útil no período." />
             <PerformanceBar label="Assinados" valor={c.assinados} valorLabel={formatNumero(c.assinados)} referencia={c.metaMensal} referenciaLabel={c.metaMensal > 0 ? `${formatNumero(c.metaMensal)} meta` : 'sem meta'} cor="#4F7CFF" titulo="Contratos assinados no período, comparado com a meta mensal real do colaborador." />
             <PerformanceBar label="Protocolados" valor={c.protocolados} valorLabel={formatNumero(c.protocolados)} referencia={media.protocolados} referenciaLabel={`${formatNumero(media.protocolados)} méd. equipe`} cor="#4F7CFF" titulo="Assinados que já foram protocolados, comparado com a média da equipe." />
-            <PerformanceBar label="Conversão (Recebidos → Assinados)" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} referencia={media.conversao} referenciaLabel={`${formatPct(media.conversao, 1)} méd. equipe`} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado, comparado com a média da equipe." />
+            <PerformanceBar label="Conversão" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado." />
           </div>
 
           {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}

@@ -1,25 +1,20 @@
 import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 
-/** Médias reais da equipe (do grupo em produção que entra no Plano de Ação) — usadas como
- * referência de comparação em vez de metas fixas que não existem no banco pra Recebidos,
- * Protocolados e Média/Dia (só Assinados tem meta real, `metaMensal`, vinda do relatório). */
+/** Médias reais da equipe (do grupo em produção que entra no Plano de Ação) — usadas só
+ * internamente pro Score Inteligente e pra "IA Recomenda" (Protocolados, Média/Dia). Recebidos
+ * e Conversão não têm média exibida no card — são valores que dependem só da distribuição de
+ * leads, não de esforço do colaborador, então comparar com a equipe seria enganoso. */
 export interface MediaEquipe {
-  recebidos: number;
   protocolados: number;
   mediaDia: number;
-  conversao: number;
 }
 
 export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisPeriodo: number): MediaEquipe {
   const n = colaboradores.length || 1;
   return {
-    recebidos: colaboradores.reduce((a, c) => a + c.recebidos, 0) / n,
     protocolados: colaboradores.reduce((a, c) => a + c.protocolados, 0) / n,
     mediaDia: diasUteisPeriodo > 0 ? colaboradores.reduce((a, c) => a + c.assinados, 0) / diasUteisPeriodo / n : 0,
-    // Recebidos → Assinados, a mesma conversão exibida no card — não a de Assinados →
-    // Protocolados (essa só alimenta o Score Inteligente, não é mostrada como "Conversão").
-    conversao: colaboradores.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / n,
   };
 }
 
