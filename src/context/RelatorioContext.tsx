@@ -1,8 +1,9 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { criarColaboradorSintetico, fetchRelatorioJudit, mapRowParaColaborador, type ColaboradorReal } from '@/lib/relatorioJudit';
 import { listarAtivos } from '@/lib/colaboradoresAtivos';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { useAuth } from '@/context/AuthContext';
+import { useAutoRefresh } from '@/context/AutoRefreshContext';
 
 interface RelatorioContextValue {
   colaboradores: ColaboradorReal[];
@@ -22,16 +23,21 @@ const RelatorioContext = createContext<RelatorioContextValue | null>(null);
  */
 export function RelatorioProvider({ children }: { children: ReactNode }) {
   const { sessao } = useAuth();
+  const { tick } = useAutoRefresh();
   const [colaboradores, setColaboradores] = useState<ColaboradorReal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [versao, setVersao] = useState(0);
+  const carregouAlgumaVez = useRef(false);
 
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
 
-    setLoading(true);
+    // Atualização automática (a cada 5 min, ver AutoRefreshContext) é silenciosa: continua
+    // mostrando os dados antigos até os novos chegarem, sem piscar "Carregando..." de novo.
+    // Isso só acontece na primeira carga de verdade.
+    if (!carregouAlgumaVez.current) setLoading(true);
     fetchRelatorioJudit(sessao.token)
       .then((rows) => {
         if (cancelado) return;
@@ -54,13 +60,16 @@ export function RelatorioProvider({ children }: { children: ReactNode }) {
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados.');
       })
       .finally(() => {
-        if (!cancelado) setLoading(false);
+        if (!cancelado) {
+          setLoading(false);
+          carregouAlgumaVez.current = true;
+        }
       });
 
     return () => {
       cancelado = true;
     };
-  }, [sessao, versao]);
+  }, [sessao, versao, tick]);
 
   return (
     <RelatorioContext.Provider value={{ colaboradores, loading, error, refetch: () => setVersao((v) => v + 1) }}>

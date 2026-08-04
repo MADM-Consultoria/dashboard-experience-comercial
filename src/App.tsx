@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { DataSelecionadaProvider } from '@/context/DataSelecionadaContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { AutoRefreshProvider } from '@/context/AutoRefreshContext';
 import { RelatorioProvider } from '@/context/RelatorioContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -23,6 +24,7 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <AutoRefreshProvider>
         <RelatorioProvider>
           <DataSelecionadaProvider>
             <BrowserRouter>
@@ -57,6 +59,7 @@ function App() {
             </BrowserRouter>
           </DataSelecionadaProvider>
         </RelatorioProvider>
+        </AutoRefreshProvider>
       </AuthProvider>
     </ThemeProvider>
   );

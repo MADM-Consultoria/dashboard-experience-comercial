@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useAutoRefresh } from '@/context/AutoRefreshContext';
 import { calcularKpiEquipe, pct } from '@/lib/metrics';
 import { calcularRanking } from '@/lib/ranking';
 import { gerarAlertas } from '@/lib/alerts';
@@ -56,8 +57,10 @@ export function getPeriodoMesAtualReal() {
 export function useIntelligence(periodoFixo?: { inicio: string; fim: string; label: string }) {
   const { colaboradores: colaboradoresBase, loading: loadingRelatorio, error: errorRelatorio } = useRelatorio();
   const { sessao } = useAuth();
+  const { tick } = useAutoRefresh();
   const periodoSelecionadoCalendario = useDataSelecionada();
   const { inicio, fim, label: labelPeriodo } = periodoFixo ?? periodoSelecionadoCalendario;
+  const carregouPeriodoAlgumaVez = useRef(false);
 
   const [assinadosPeriodo, setAssinadosPeriodo] = useState<ContagemPeriodo>(CONTAGEM_VAZIA);
   const [recebidosPeriodo, setRecebidosPeriodo] = useState<ContagemPeriodo>(CONTAGEM_VAZIA);
@@ -72,7 +75,9 @@ export function useIntelligence(periodoFixo?: { inicio: string; fim: string; lab
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
-    setLoadingPeriodo(true);
+    // Igual ao RelatorioContext: a atualização automática de 5 em 5 minutos não pode piscar
+    // "Carregando..." de novo — só a primeira carga real mostra esse estado.
+    if (!carregouPeriodoAlgumaVez.current) setLoadingPeriodo(true);
     setErrorPeriodo(null);
     Promise.all([
       fetchAssinadosPeriodo(sessao.token, inicio, fim),
@@ -96,12 +101,15 @@ export function useIntelligence(periodoFixo?: { inicio: string; fim: string; lab
         if (!cancelado) setErrorPeriodo(err instanceof Error ? err.message : 'Erro ao carregar os dados do período.');
       })
       .finally(() => {
-        if (!cancelado) setLoadingPeriodo(false);
+        if (!cancelado) {
+          setLoadingPeriodo(false);
+          carregouPeriodoAlgumaVez.current = true;
+        }
       });
     return () => {
       cancelado = true;
     };
-  }, [sessao, inicio, fim]);
+  }, [sessao, inicio, fim, tick]);
 
   const periodoMes = getPeriodoMesAtualReal();
 
@@ -121,7 +129,7 @@ export function useIntelligence(periodoFixo?: { inicio: string; fim: string; lab
     return () => {
       cancelado = true;
     };
-  }, [sessao, periodoMes.inicio, periodoMes.fimHoje]);
+  }, [sessao, periodoMes.inicio, periodoMes.fimHoje, tick]);
   const diasUteisTotaisMes = contarDiasUteis({ inicio: periodoMes.inicio, fim: periodoMes.fim, label: periodoMes.label });
   const diasUteisDecorridos = contarDiasUteis({ inicio: periodoMes.inicio, fim: periodoMes.fimHoje, label: periodoMes.label });
 
