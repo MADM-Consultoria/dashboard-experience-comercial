@@ -86,6 +86,22 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
             <p className="text-sm text-slate-500">Ninguém assinou nesse período.</p>
           ) : (
             <>
+              <ul className="space-y-2 max-h-[35vh] overflow-y-auto pr-1 mb-4">
+              {contribuiram.map((c) => (
+                <li key={c.id} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2.5">
+                  <Avatar nome={c.nome} size={32} />
+                  <div className="min-w-0 flex-1">
+                    <Link to={`/colaboradores/${c.id}`} onClick={onFechar} className="text-sm font-semibold text-slate-900 hover:underline truncate block">
+                      {c.nome}
+                    </Link>
+                    <p className="text-[12px] text-slate-500 truncate">{c.time}</p>
+                  </div>
+                  <StatusPill status={c.status} />
+                  <span className="text-base font-bold text-slate-900 shrink-0 w-10 text-right">{formatNumero(c.assinados)}</span>
+                </li>
+              ))}
+              </ul>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <p className="text-[12px] font-medium text-slate-500 mb-2">Top contribuintes</p>
@@ -174,22 +190,6 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-
-              <ul className="space-y-2 max-h-[35vh] overflow-y-auto pr-1">
-              {contribuiram.map((c) => (
-                <li key={c.id} className="flex items-center gap-3 rounded-lg border border-slate-200 p-2.5">
-                  <Avatar nome={c.nome} size={32} />
-                  <div className="min-w-0 flex-1">
-                    <Link to={`/colaboradores/${c.id}`} onClick={onFechar} className="text-sm font-semibold text-slate-900 hover:underline truncate block">
-                      {c.nome}
-                    </Link>
-                    <p className="text-[12px] text-slate-500 truncate">{c.time}</p>
-                  </div>
-                  <StatusPill status={c.status} />
-                  <span className="text-base font-bold text-slate-900 shrink-0 w-10 text-right">{formatNumero(c.assinados)}</span>
-                </li>
-              ))}
-              </ul>
             </>
           )}
         </Card>
