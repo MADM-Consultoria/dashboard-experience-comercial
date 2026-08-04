@@ -393,7 +393,11 @@ function ListaSupervisores({
                   <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="dia" stroke="#64748b" tick={{ fontSize: 10 }} tickLine={false} axisLine={false} interval={4} />
                   <YAxis stroke="#64748b" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
-                  <Tooltip contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12, color: '#1e293b' }}
+                    labelStyle={{ color: '#1e293b' }}
+                    itemStyle={{ color: '#1e293b' }}
+                  />
                   {times.map((nome, indice) => (
                     <Line key={nome} type="monotone" dataKey={nome} name={nome} stroke={CORES_TIME[indice % CORES_TIME.length]} strokeWidth={2} dot={false} />
                   ))}

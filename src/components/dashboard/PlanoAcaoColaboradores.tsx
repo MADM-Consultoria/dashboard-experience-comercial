@@ -108,9 +108,11 @@ export function PlanoAcaoColaboradores({
     [comScore],
   );
 
+  // Melhores primeiro, críticos por último — quem for filtrar por status já vai direto no que
+  // precisa, sem a grade inteira abrir liderada pelos piores casos.
   const linhas = comScore
     .filter((x) => !filtroStatus || x.banda === filtroStatus)
-    .sort((a, b) => a.score - b.score);
+    .sort((a, b) => b.score - a.score);
 
   return (
     <Card>

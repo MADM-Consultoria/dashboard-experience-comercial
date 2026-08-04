@@ -25,11 +25,19 @@ interface QuadradosRitmoProps {
 /** Indicador de ritmo diário — quadradinhos que vão sendo pintados conforme o colaborador
  * produz hoje, coloridos pela distância até a meta diária (a meta do mês inteiro continua
  * exibida como texto ao lado). Usado em Assinados e Protocolados no Plano de Ação. */
+// Quantos quadrados desenhar quando não dá pra calcular a meta diária real (colaborador sem
+// meta cadastrada) — só pra manter o indicador visualmente consistente com os outros cards.
+const QUADRADOS_PADRAO = 4;
+
 export function QuadradosRitmo({ label, valorMes, meta, metaLabel, valorHoje, numQuadrados }: QuadradosRitmoProps) {
   const temRitmoHoje = numQuadrados > 0 && typeof valorHoje === 'number';
+  // Sem "hoje" pro período filtrado (mês passado) ou sem meta diária calculável: mostra os
+  // quadrados todos vermelhos, como se fosse zerado — não some a barra nem vira texto confuso.
+  const { pintados, cor } = temRitmoHoje ? tierQuadrados(valorHoje!, numQuadrados) : { pintados: numQuadrados || QUADRADOS_PADRAO, cor: '#EF4444' };
+  const totalQuadrados = numQuadrados || QUADRADOS_PADRAO;
 
   return (
-    <div title={temRitmoHoje ? `Ritmo de hoje: quanto já foi feito hoje frente à meta diária (${metaLabel.toLowerCase()} ÷ dias úteis do mês).` : undefined}>
+    <div title={temRitmoHoje ? `Ritmo de hoje: quanto já foi feito hoje frente à meta diária (${metaLabel.toLowerCase()} ÷ dias úteis do mês).` : 'Sem dado de "hoje" para o período filtrado — tratado como zerado.'}>
       <div className="flex items-center justify-between text-[11px] mb-1">
         <span className="text-slate-500">{label}</span>
         <span className="font-semibold text-slate-700">
@@ -38,29 +46,18 @@ export function QuadradosRitmo({ label, valorMes, meta, metaLabel, valorHoje, nu
         </span>
       </div>
 
-      {temRitmoHoje ? (
-        (() => {
-          const { pintados, cor } = tierQuadrados(valorHoje!, numQuadrados);
-          return (
-            <div className="flex items-center gap-2">
-              <div className="flex gap-1">
-                {Array.from({ length: numQuadrados }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-4 w-4 rounded-[3px] border border-slate-200 dark:border-slate-600 transition-colors duration-300"
-                    style={i < pintados ? { backgroundColor: cor, borderColor: cor } : undefined}
-                  />
-                ))}
-              </div>
-              <span className="text-[10px] text-slate-400">{valorHoje} hoje</span>
-            </div>
-          );
-        })()
-      ) : (
-        <div className="h-4 flex items-center">
-          <span className="text-[11px] text-slate-400">Sem dado de "hoje" para o período filtrado.</span>
+      <div className="flex items-center gap-2">
+        <div className="flex gap-1">
+          {Array.from({ length: totalQuadrados }).map((_, i) => (
+            <div
+              key={i}
+              className="h-4 w-4 rounded-[3px] border border-slate-200 dark:border-slate-600 transition-colors duration-300"
+              style={i < pintados ? { backgroundColor: cor, borderColor: cor } : undefined}
+            />
+          ))}
         </div>
-      )}
+        {temRitmoHoje && <span className="text-[10px] text-slate-400">{valorHoje} hoje</span>}
+      </div>
     </div>
   );
 }

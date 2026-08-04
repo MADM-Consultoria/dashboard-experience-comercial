@@ -20,7 +20,12 @@ export function RadarPerformance({ colaborador, media }: { colaborador: Colabora
         <PolarAngleAxis dataKey="metrica" tick={{ fill: '#94a3b8', fontSize: 11 }} />
         <Radar name="Equipe" dataKey="equipe" stroke="#64748b" fill="#64748b" fillOpacity={0.15} />
         <Radar name={colaborador.nome.split(' ')[0]} dataKey="colaborador" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} />
-        <Tooltip formatter={(v) => `${Number(v).toFixed(0)}%`} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+        <Tooltip
+          formatter={(v) => `${Number(v).toFixed(0)}%`}
+          contentStyle={{ fontSize: 12, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#1e293b' }}
+          labelStyle={{ color: '#1e293b' }}
+          itemStyle={{ color: '#1e293b' }}
+        />
       </RadarChart>
     </ResponsiveContainer>
   );

@@ -130,7 +130,7 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
                         <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
                         <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={28} />
-                        <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Assinados']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                        <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Assinados']} contentStyle={{ fontSize: 12, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#1e293b' }} labelStyle={{ color: '#1e293b' }} itemStyle={{ color: '#1e293b' }} />
                         <Bar dataKey="assinados" radius={[4, 4, 0, 0]} barSize={28}>
                           {porTime.map((_, indice) => (
                             <Cell key={indice} fill={CORES_TIME[indice % CORES_TIME.length]} />
@@ -150,7 +150,7 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
                       <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="etapa" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={32} />
-                      <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Total']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                      <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Total']} contentStyle={{ fontSize: 12, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#1e293b' }} labelStyle={{ color: '#1e293b' }} itemStyle={{ color: '#1e293b' }} />
                       <Bar dataKey="valor" radius={[4, 4, 0, 0]} barSize={36}>
                         <Cell fill="#0ea5e9" />
                         <Cell fill="#2563eb" />
@@ -167,7 +167,7 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
                       <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
                       <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={28} allowDecimals={false} />
-                      <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Colaboradores']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                      <Tooltip formatter={(v) => [formatNumero(Number(v)), 'Colaboradores']} contentStyle={{ fontSize: 12, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#1e293b' }} labelStyle={{ color: '#1e293b' }} itemStyle={{ color: '#1e293b' }} />
                       <Bar dataKey="quantidade" radius={[4, 4, 0, 0]} barSize={28}>
                         {porStatus.map((s) => (
                           <Cell key={s.status} fill={STATUS_COLOR[s.status]} />
@@ -185,7 +185,7 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
                     <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="nome" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} width={32} unit="%" />
-                    <Tooltip formatter={(v) => [`${Number(v).toFixed(0)}%`, 'Taxa de assinados']} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                    <Tooltip formatter={(v) => [`${Number(v).toFixed(0)}%`, 'Taxa de assinados']} contentStyle={{ fontSize: 12, borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#1e293b' }} labelStyle={{ color: '#1e293b' }} itemStyle={{ color: '#1e293b' }} />
                     <Line type="monotone" dataKey="taxa" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
                   </LineChart>
                 </ResponsiveContainer>

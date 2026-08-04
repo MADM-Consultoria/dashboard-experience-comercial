@@ -23,7 +23,9 @@ export function RadarConversaoLigacoes({ colaboradores }: { colaboradores: Colab
         <PolarAngleAxis dataKey="metrica" tick={{ fill: '#94a3b8', fontSize: 11 }} />
         <Radar name="Equipe" dataKey="equipe" stroke="#6366f1" fill="#6366f1" fillOpacity={0.35} isAnimationActive={false} />
         <Tooltip
-          contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }}
+          contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12, color: '#1e293b' }}
+          labelStyle={{ color: '#1e293b' }}
+          itemStyle={{ color: '#1e293b' }}
           formatter={(v) => [`${Number(v).toFixed(0)}`, 'Equipe']}
         />
       </RadarChart>

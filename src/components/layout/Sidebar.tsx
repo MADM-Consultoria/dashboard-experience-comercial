@@ -53,10 +53,9 @@ export function Sidebar() {
             key={item.to}
             to={item.to}
             end={item.end}
-            title={colapsada ? item.label : undefined}
             className={({ isActive }) =>
               clsx(
-                'group flex items-center rounded-lg py-2.5 text-[13.5px] font-medium transition-colors',
+                'group relative flex items-center rounded-lg py-2.5 text-[13.5px] font-medium transition-colors',
                 colapsada ? 'justify-center px-0' : 'gap-3 px-3',
                 isActive ? 'bg-blue-500/15 text-slate-900 dark:text-slate-100' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200',
               )
@@ -66,6 +65,11 @@ export function Sidebar() {
               <>
                 <item.icon size={17} className={clsx('shrink-0', isActive ? 'text-blue-600' : 'text-slate-500 group-hover:text-slate-600')} />
                 {!colapsada && <span className="truncate">{item.label}</span>}
+                {colapsada && (
+                  <span className="pointer-events-none absolute left-full top-1/2 z-20 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-[12px] font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                    {item.label}
+                  </span>
+                )}
               </>
             )}
           </NavLink>

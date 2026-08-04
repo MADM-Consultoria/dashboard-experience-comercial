@@ -213,7 +213,9 @@ export default function ColaboradorDetalhe() {
               <Tooltip
                 formatter={(v, name) => [formatNumero(Number(v)), name === 'atual' ? periodoMesEvolucao.label : periodoMesAnterior.label]}
                 labelFormatter={(l) => `Dia ${l}`}
-                contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12 }}
+                contentStyle={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, fontSize: 12, color: '#1e293b' }}
+                labelStyle={{ color: '#1e293b' }}
+                itemStyle={{ color: '#1e293b' }}
               />
               <Legend
                 formatter={(value) => (value === 'atual' ? periodoMesEvolucao.label : periodoMesAnterior.label)}

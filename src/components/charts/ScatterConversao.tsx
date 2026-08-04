@@ -28,9 +28,9 @@ export function ScatterConversao({ colaboradores }: { colaboradores: Colaborador
             const p = payload[0].payload as (typeof dados)[number];
             return (
               <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '8px 10px', fontSize: 12 }}>
-                <p className="text-slate-700 font-medium mb-1">{p.nome}</p>
-                <p className="text-slate-500">Assinados: {p.assinados}</p>
-                <p className="text-slate-500">Protocolados: {p.protocolados}</p>
+                <p style={{ color: '#334155', fontWeight: 600, marginBottom: 4 }}>{p.nome}</p>
+                <p style={{ color: '#64748b' }}>Assinados: {p.assinados}</p>
+                <p style={{ color: '#64748b' }}>Protocolados: {p.protocolados}</p>
               </div>
             );
           }}
