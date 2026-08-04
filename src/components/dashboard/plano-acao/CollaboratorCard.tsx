@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Minus, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, FileCheck2, FileSignature, Gauge, Inbox, Minus, Percent, Sparkles } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
 import { Sparkline } from './Sparkline';
-import { PerformanceBar } from './PerformanceBar';
-import { RecebidosDestaque } from './RecebidosDestaque';
+import { MetricRow } from './MetricRow';
 import { QuadradosRitmo } from './QuadradosRitmo';
 import { QuickActions } from './QuickActions';
 import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, mediaDiaColaborador, type MediaEquipe } from './score';
@@ -97,32 +96,46 @@ export function CollaboratorCard({
 
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
-          {/* Métricas com barra de comparação — Recebidos e Média/Dia não têm meta/média real
-             (dependem da distribuição de leads e dos dias úteis, não são metas que o colaborador
-             persegue), por isso viram destaque simples em vez de barra/comparação inventada. */}
+          {/* Todas as métricas com a mesma casca visual (ícone + destaque colorido) — Recebidos,
+             Média/Dia e Conversão não têm meta real pra virar barra de progresso, então mostram
+             só o valor; Assinados e Protocolados usam a mesma casca, mas com os quadradinhos de
+             ritmo diário como conteúdo. */}
           <div className="space-y-2.5">
-            <RecebidosDestaque valor={c.recebidos} />
-            <div title="Assinados por dia útil no período." className="flex items-center justify-between text-[11px] px-0.5">
-              <span className="text-slate-500">Média/Dia</span>
-              <span className="font-semibold text-slate-700">{mediaDia.toFixed(1)} assinados/dia</span>
-            </div>
-            <QuadradosRitmo
-              label="Assinados"
-              valorMes={c.assinados}
-              meta={c.metaMensal}
-              metaLabel={`${formatNumero(c.metaMensal)} meta`}
-              valorHoje={assinadosHoje}
-              numQuadrados={numQuadradosAssinados}
+            <MetricRow
+              icon={Inbox}
+              cor="#22C55E"
+              label="Recebidos"
+              titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador."
+              value={formatNumero(c.recebidos)}
             />
-            <QuadradosRitmo
-              label="Protocolados"
-              valorMes={c.protocolados}
-              meta={c.metaProtocolados}
-              metaLabel={`${formatNumero(c.metaProtocolados)} meta`}
-              valorHoje={protocoladosHoje}
-              numQuadrados={numQuadradosProtocolados}
+            <MetricRow icon={Gauge} cor="#4F7CFF" label="Média/Dia" titulo="Assinados por dia útil no período." value={`${mediaDia.toFixed(1)} assinados/dia`} />
+            <MetricRow icon={FileSignature} cor="#4F7CFF" label="Assinados">
+              <QuadradosRitmo
+                label="Assinados"
+                valorMes={c.assinados}
+                meta={c.metaMensal}
+                metaLabel={`${formatNumero(c.metaMensal)} meta`}
+                valorHoje={assinadosHoje}
+                numQuadrados={numQuadradosAssinados}
+              />
+            </MetricRow>
+            <MetricRow icon={FileCheck2} cor="#22C55E" label="Protocolados">
+              <QuadradosRitmo
+                label="Protocolados"
+                valorMes={c.protocolados}
+                meta={c.metaProtocolados}
+                metaLabel={`${formatNumero(c.metaProtocolados)} meta`}
+                valorHoje={protocoladosHoje}
+                numQuadrados={numQuadradosProtocolados}
+              />
+            </MetricRow>
+            <MetricRow
+              icon={Percent}
+              cor="#8B5CF6"
+              label="Conversão"
+              titulo="Percentual de leads recebidos que viraram contrato assinado."
+              value={formatPct(c.conversaoRecebidosAssinados, 1)}
             />
-            <PerformanceBar label="Conversão" valor={c.conversaoRecebidosAssinados} valorLabel={formatPct(c.conversaoRecebidosAssinados, 1)} cor="#4F7CFF" titulo="Percentual de leads recebidos que viraram contrato assinado." />
           </div>
 
           {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
