@@ -289,7 +289,12 @@ export default function VisaoGeral() {
       </div>
 
       <div className="mt-6">
-        <PlanoAcaoColaboradores colaboradores={colaboradores} diasUteisPeriodo={diasUteisPeriodoSelecionado} inicioPeriodoSelecionado={periodoSelecionado.inicio} />
+        <PlanoAcaoColaboradores
+          colaboradores={colaboradores}
+          diasUteisPeriodo={diasUteisPeriodoSelecionado}
+          diasUteisTotaisMes={diasUteisTotaisMes}
+          inicioPeriodoSelecionado={periodoSelecionado.inicio}
+        />
       </div>
     </div>
   );

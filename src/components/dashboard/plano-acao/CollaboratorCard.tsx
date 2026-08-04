@@ -15,22 +15,25 @@ interface CollaboratorCardProps {
   colaborador: ColaboradorReal;
   media: MediaEquipe;
   diasUteisPeriodo: number;
+  diasUteisTotaisMes: number;
   serieUltimosDias: number[];
   diasSerie: string[];
   indice: number;
 }
 
-export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, serieUltimosDias, diasSerie, indice }: CollaboratorCardProps) {
+export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, diasUteisTotaisMes, serieUltimosDias, diasSerie, indice }: CollaboratorCardProps) {
   const [aberto, setAberto] = useState(false);
   const { score, banda } = calcularScoreInteligente(c, media, diasUteisPeriodo);
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
   const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda);
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
 
-  // Ritmo de hoje (quadradinhos): meta diária = meta mensal ÷ dias úteis do período, arredondada
-  // pra cima. "Hoje" é achado pelo índice da data de hoje na série do mês — se o período
-  // filtrado não inclui hoje (ex: mês passado), não tem ritmo de hoje pra mostrar.
-  const numQuadrados = c.metaMensal > 0 && diasUteisPeriodo > 0 ? Math.max(1, Math.ceil(c.metaMensal / diasUteisPeriodo)) : 0;
+  // Ritmo de hoje (quadradinhos): meta diária = meta mensal ÷ dias úteis do MÊS INTEIRO (não do
+  // período filtrado — se o filtro for só 1 ou 2 dias, dividir por eles infla a meta diária pra
+  // dezenas de quadrados). Arredondada pra cima. "Hoje" é achado pelo índice da data de hoje na
+  // série do mês — se o período filtrado não inclui hoje (ex: mês passado), não tem ritmo de
+  // hoje pra mostrar.
+  const numQuadrados = c.metaMensal > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaMensal / diasUteisTotaisMes)) : 0;
   const hojeISO = (() => {
     const hoje = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
