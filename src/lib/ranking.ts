@@ -2,7 +2,7 @@ import type { ColaboradorMetricas, Medalha, RankingItem, TipoRanking } from '@/t
 
 const CAMPO_POR_TIPO: Record<TipoRanking, (c: ColaboradorMetricas) => number> = {
   geral: (c) => c.assinados,
-  conversao: (c) => c.conversaoAssinadosProtocolados,
+  conversao: (c) => c.conversaoRecebidosAssinados,
   protocolados: (c) => c.protocolados,
   recebidos: (c) => c.recebidos,
   assinados: (c) => c.assinados,
