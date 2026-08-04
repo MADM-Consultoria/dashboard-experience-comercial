@@ -91,7 +91,7 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                   <p className="truncate" style={{ fontSize: 12, color: '#9CA3AF' }}>{meta.sublabel}</p>
                 </div>
 
-                <div className="flex-1 min-w-0 flex items-center">
+                <div className="flex-1 min-w-0 flex items-center justify-center">
                   <div
                     className="flex flex-col items-center justify-center text-white transition-[width] duration-500"
                     style={{
