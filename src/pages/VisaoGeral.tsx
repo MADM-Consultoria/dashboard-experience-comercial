@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Award, FileCheck2, FileSignature, Gauge, Inbox, Percent, TrendingUp, Trophy, UserX } from 'lucide-react';
+import { AlertTriangle, Award, FileCheck2, FileSignature, Gauge, Inbox, Percent, TrendingDown, TrendingUp, Trophy, UserX } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { KpiCard } from '@/components/kpi/KpiCard';
 import { ResumoMesCard } from '@/components/kpi/ResumoMesCard';
@@ -64,6 +64,13 @@ export default function VisaoGeral() {
     const protocolados = doTime.reduce((a, c) => a + c.protocolados, 0);
     return { time, pessoas: doTime.length, assinados, protocolados, taxa: assinados ? (protocolados / assinados) * 100 : 0 };
   });
+  // Só entra na comparação de melhor/pior taxa quem já assinou algo no período — time sem
+  // nenhum assinado (ex: Treinamento) fica com taxa 0% só por falta de dado, não por
+  // desempenho ruim, e não faz sentido destacar isso como "pior time".
+  const timesComProducao = porTime.filter((t) => t.assinados > 0);
+  const melhorTime = timesComProducao.length ? [...timesComProducao].sort((a, b) => b.taxa - a.taxa)[0] : null;
+  const piorTime = timesComProducao.length > 1 ? [...timesComProducao].sort((a, b) => a.taxa - b.taxa)[0] : null;
+  const totalProtocoladosTimes = porTime.reduce((a, t) => a + t.protocolados, 0);
 
   if (loading) {
     return (
@@ -232,6 +239,36 @@ export default function VisaoGeral() {
                 <span className="text-[13px] font-semibold text-slate-900 text-right whitespace-nowrap w-14">{formatPct(t.taxa)}</span>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                <Trophy size={14} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-500">Melhor taxa</p>
+                <p className="text-[13px] font-semibold text-slate-900 truncate">{melhorTime ? `${melhorTime.time} · ${formatPct(melhorTime.taxa)}` : '—'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-500/10 text-red-400">
+                <TrendingDown size={14} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-500">Menor taxa</p>
+                <p className="text-[13px] font-semibold text-slate-900 truncate">{piorTime ? `${piorTime.time} · ${formatPct(piorTime.taxa)}` : '—'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+                <FileCheck2 size={14} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-slate-500">Total protocolados</p>
+                <p className="text-[13px] font-semibold text-slate-900">{formatNumero(totalProtocoladosTimes)}</p>
+              </div>
+            </div>
           </div>
         </Card>
 

@@ -11,59 +11,34 @@ const TITULO_TIPO: Record<AlertaInteligente['tipo'], string> = {
   venda_ganha_baixa: 'Venda Ganha abaixo do esperado no mês',
 };
 
+/** Versão compacta — só o essencial (quem, o quê, o número) pra bater o olho rápido. O detalhe
+ * completo (possível motivo, sugestão de ação) fica no perfil do colaborador, não precisa
+ * duplicar aqui; o card cheio deixava a coluna desproporcionalmente alta comparado ao resto
+ * da tela. */
 export function AlertCard({ alerta }: { alerta: AlertaInteligente }) {
   const cor = PRIORIDADE_COLOR[alerta.prioridade];
   const valorExibido = alerta.tipo === 'venda_ganha_baixa' ? `${formatNumero(alerta.taxa)} venda(s)` : formatPct(alerta.taxa);
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${cor}1a`, color: cor }}>
-            <AlertOctagon size={17} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span
-                className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-                style={{ color: cor, backgroundColor: `${cor}1a` }}
-              >
-                Alerta {PRIORIDADE_LABEL[alerta.prioridade]}
-              </span>
-              <Link to={`/colaboradores/${alerta.colaboradorId}`} className="text-sm font-semibold text-slate-900 hover:underline">
-                {alerta.colaboradorNome}
-              </Link>
-            </div>
-            <p className="mt-1 text-[13px] text-slate-600">{TITULO_TIPO[alerta.tipo]} — {valorExibido}</p>
-            <p className="mt-1 text-[13px] text-slate-500">{alerta.impacto}</p>
-          </div>
-        </div>
+    <Link
+      to={`/colaboradores/${alerta.colaboradorId}`}
+      className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 hover:bg-slate-100 transition-colors"
+    >
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${cor}1a`, color: cor }}>
+        <AlertOctagon size={15} />
       </div>
-
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 pl-12">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Possível motivo</p>
-          <ul className="space-y-1">
-            {alerta.possiveisMotivos.map((m, i) => (
-              <li key={i} className="text-[12.5px] text-slate-500 flex gap-1.5">
-                <span className="text-slate-400">•</span>
-                {m}
-              </li>
-            ))}
-          </ul>
+      <div className="min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            style={{ color: cor, backgroundColor: `${cor}1a` }}
+          >
+            {PRIORIDADE_LABEL[alerta.prioridade]}
+          </span>
+          <span className="text-sm font-semibold text-slate-900 truncate">{alerta.colaboradorNome}</span>
         </div>
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500 mb-1">Sugestão de ação</p>
-          <ul className="space-y-1">
-            {alerta.sugestoesAcao.map((s, i) => (
-              <li key={i} className="text-[12.5px] text-slate-500 flex gap-1.5">
-                <span className="text-slate-400">•</span>
-                {s}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p className="mt-0.5 text-[12.5px] text-slate-600 truncate">{TITULO_TIPO[alerta.tipo]} — {valorExibido}</p>
       </div>
-    </div>
+    </Link>
   );
 }
