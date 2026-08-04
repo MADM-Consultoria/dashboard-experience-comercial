@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronDown, Minus, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, Minus, Sparkles } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
@@ -59,14 +59,6 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
         </p>
       )}
 
-      <button
-        onClick={() => setAberto((v) => !v)}
-        className="flex items-center justify-center gap-1 text-[12px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors -my-1"
-      >
-        {aberto ? 'Ver menos' : 'Ver detalhes das métricas'}
-        <ChevronDown size={14} className={`transition-transform ${aberto ? 'rotate-180' : ''}`} />
-      </button>
-
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
           {/* Métricas com barra de comparação */}
@@ -111,7 +103,7 @@ export function CollaboratorCard({ colaborador: c, media, diasUteisPeriodo, seri
         </div>
       )}
 
-      <QuickActions colaboradorId={c.id} />
+      <QuickActions aberto={aberto} onToggle={() => setAberto((v) => !v)} />
     </div>
   );
 }
