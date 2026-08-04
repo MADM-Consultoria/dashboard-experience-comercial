@@ -18,8 +18,9 @@ const ETAPA_META: Record<EtapaFunil['etapa'], EtapaMeta> = {
 };
 
 // mesmas 3 colunas em toda linha (inclusive o cabeçalho "Taxa de conversão") — é o grid, não o
-// conteúdo de cada linha, que garante que tudo fique alinhado independente do texto.
-const COLUNAS = 'grid-cols-[132px_1fr_56px]';
+// conteúdo de cada linha, que garante que tudo fique alinhado independente do texto. Coluna do
+// meio tem largura mínima pra não deixar o trapézio espremido em cards estreitos.
+const COLUNAS = 'grid-cols-[104px_minmax(90px,1fr)_66px]';
 
 export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
   const total = etapas[0]?.valor || 1;
@@ -53,14 +54,11 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
 
           return (
             <div key={etapa.etapa} className={`grid ${COLUNAS} items-center gap-3`}>
-              <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex flex-col items-center gap-1 text-center min-w-0">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${meta.de}26`, color: meta.de }}>
                   <Icon size={15} />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[12.5px] font-semibold text-slate-800 dark:text-slate-100 truncate">{etapa.etapa}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{meta.sublabel}</p>
-                </div>
+                <p className="text-[11.5px] font-semibold text-slate-800 dark:text-slate-100 leading-tight truncate w-full">{etapa.etapa}</p>
               </div>
 
               <div className="h-14 w-full flex items-center">
