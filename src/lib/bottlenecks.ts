@@ -1,3 +1,4 @@
+
 import type { ColaboradorMetricas, EtapaFunil, Gargalo, KpiEquipe } from '@/types/domain';
 
 export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): EtapaFunil[] {
@@ -5,7 +6,12 @@ export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): Et
     { etapa: 'Recebidos', valor: kpi.totalRecebidos, taxaConversaoEtapaAnterior: null },
     { etapa: 'Assinados', valor: kpi.totalAssinados, taxaConversaoEtapaAnterior: kpi.taxaConversaoGeral > 0 ? (kpi.totalAssinados / (kpi.totalRecebidos || 1)) * 100 : 0 },
     { etapa: 'Protocolados', valor: kpi.totalProtocolados, taxaConversaoEtapaAnterior: (kpi.totalProtocolados / (kpi.totalAssinados || 1)) * 100 },
-    { etapa: 'Venda Ganha', valor: totalVendaGanha, taxaConversaoEtapaAnterior: (totalVendaGanha / (kpi.totalProtocolados || 1)) * 100 },
+    // Venda Ganha não é estritamente posterior a Protocolados dentro do mesmo período filtrado
+    // (a data de protocolo e a de venda ganha são colunas independentes — um caso pode ganhar
+    // a venda num mês tendo sido protocolado num mês anterior), então dividir pelo total de
+    // Protocolados do período pode passar de 100% e não faz sentido pra quem está lendo. Em vez
+    // disso, mostra a taxa de conversão geral: quantos % dos Recebidos viraram Venda Ganha.
+    { etapa: 'Venda Ganha', valor: totalVendaGanha, taxaConversaoEtapaAnterior: (totalVendaGanha / (kpi.totalRecebidos || 1)) * 100 },
   ];
 }
 

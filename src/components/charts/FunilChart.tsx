@@ -11,35 +11,33 @@ interface EtapaMeta {
   iconColor: string;
 }
 
-// Cores exatas do PRD do componente (dark mode fixo, independente do tema do resto do
-// dashboard — é a especificação visual que foi pedida pra esse componente especificamente).
 const ETAPA_META: Record<EtapaFunil['etapa'], EtapaMeta> = {
   Recebidos: {
     icon: Users,
     sublabel: 'Total de leads recebidos',
     gradient: 'linear-gradient(135deg, #3B82F6 0%, #4F46E5 100%)',
-    iconBg: 'rgba(59, 130, 246, 0.2)',
+    iconBg: 'rgba(59, 130, 246, 0.16)',
     iconColor: '#3B82F6',
   },
   Assinados: {
     icon: CheckCircle2,
     sublabel: 'Leads que assinaram',
     gradient: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-    iconBg: 'rgba(16, 185, 129, 0.2)',
+    iconBg: 'rgba(16, 185, 129, 0.16)',
     iconColor: '#10B981',
   },
   Protocolados: {
     icon: FileText,
     sublabel: 'Leads protocolados',
     gradient: 'linear-gradient(135deg, #84CC16 0%, #65A30D 100%)',
-    iconBg: 'rgba(132, 204, 22, 0.2)',
+    iconBg: 'rgba(132, 204, 22, 0.16)',
     iconColor: '#84CC16',
   },
   'Venda Ganha': {
     icon: Trophy,
     sublabel: 'Processos com venda ganha',
     gradient: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-    iconBg: 'rgba(245, 158, 11, 0.2)',
+    iconBg: 'rgba(245, 158, 11, 0.16)',
     iconColor: '#F59E0B',
   },
 };
@@ -66,14 +64,14 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
   const alturaTotal = etapas.length * ROW_H + (etapas.length - 1) * ROW_GAP;
 
   return (
-    <div className="rounded-2xl p-5" style={{ backgroundColor: '#0B0F19', border: '1px solid #1F2937' }}>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 p-5">
       <div className="flex items-center gap-3 mb-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
           <Filter size={18} />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Funil Comercial</h3>
-          <p className="text-[12px]" style={{ color: '#9CA3AF' }}>Acompanhe cada etapa do seu processo de vendas</p>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Funil Comercial</h3>
+          <p className="text-[12px] text-slate-500">Acompanhe cada etapa do seu processo de vendas</p>
         </div>
       </div>
 
@@ -88,15 +86,15 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
             return (
               <div
                 key={etapa.etapa}
-                className="flex items-center gap-3 rounded-xl"
-                style={{ height: ROW_H, padding: '16px 20px', backgroundColor: 'rgba(17, 24, 39, 0.7)', border: '1px solid #1F2937' }}
+                className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60"
+                style={{ height: ROW_H, padding: '16px 20px' }}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: meta.iconBg, color: meta.iconColor }}>
                   <Icon size={18} />
                 </div>
                 <div className="min-w-0 shrink-0" style={{ width: 96 }}>
-                  <p className="font-semibold text-white truncate" style={{ fontSize: 16, lineHeight: 1.2 }}>{etapa.etapa}</p>
-                  <p className="truncate" style={{ fontSize: 12, color: '#9CA3AF' }}>{meta.sublabel}</p>
+                  <p className="font-semibold text-slate-800 dark:text-slate-100 truncate" style={{ fontSize: 16, lineHeight: 1.2 }}>{etapa.etapa}</p>
+                  <p className="truncate text-slate-500" style={{ fontSize: 12 }}>{meta.sublabel}</p>
                 </div>
 
                 <div className="flex-1 min-w-0 flex items-center justify-center">
@@ -110,7 +108,7 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                     }}
                   >
                     <span className="font-bold leading-tight" style={{ fontSize: 24 }}>{formatNumero(etapa.valor)}</span>
-                    <span className="leading-tight" style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{formatPct(pctDoTotal, 1)}</span>
+                    <span className="leading-tight" style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{formatPct(pctDoTotal, 1)}</span>
                   </div>
                 </div>
               </div>
@@ -120,15 +118,24 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
 
         {/* Pílulas de conversão estágio a estágio + linha pontilhada guia */}
         <div className="relative shrink-0" style={{ width: 74, height: alturaTotal }}>
-          <p className="absolute text-center w-full" style={{ top: -20, fontSize: 11, color: '#9CA3AF' }}>Taxa de conversão</p>
+          <p className="absolute text-center w-full text-slate-500" style={{ top: -20, fontSize: 11 }}>Taxa de conversão</p>
           {etapas.map((etapa, i) => {
             const proxima = etapas[i + 1];
             if (!proxima) return null;
             const corProxima = ETAPA_META[proxima.etapa].iconColor;
             const centroY = i * (ROW_H + ROW_GAP) + ROW_H / 2;
+            // A conversão de Protocolados → Venda Ganha não é sequencial dentro do mesmo período
+            // filtrado (datas de colunas independentes), então em vez de dividir pelo total de
+            // Protocolados (que pode passar de 100%), o valor já vem calculado como % sobre o
+            // total de Recebidos — a taxa de conversão geral do funil. Só o texto do tooltip muda.
+            const ehUltimaEtapa = !etapas[i + 2];
+            const titulo = ehUltimaEtapa
+              ? `Taxa de conversão geral: % dos Recebidos que viraram Venda Ganha (não é só sobre Protocolados, pois as datas de protocolo e de venda ganha são independentes).`
+              : `% de "${etapa.etapa}" que virou "${proxima.etapa}".`;
             return (
               <div key={etapa.etapa}>
                 <span
+                  title={titulo}
                   className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold whitespace-nowrap"
                   style={{
                     top: centroY,
@@ -136,14 +143,14 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                     borderRadius: 16,
                     padding: '4px 10px',
                     color: corProxima,
-                    backgroundColor: `${corProxima}1a`,
+                    backgroundColor: `${corProxima}26`,
                   }}
                 >
                   {formatPct(proxima.taxaConversaoEtapaAnterior ?? 0, 1)}
                 </span>
                 <div
-                  className="absolute left-1/2 border-l border-dashed"
-                  style={{ top: centroY + BADGE_H / 2, height: ROW_H + ROW_GAP - BADGE_H, borderColor: '#374151' }}
+                  className="absolute left-1/2 border-l border-dashed border-slate-300 dark:border-slate-600"
+                  style={{ top: centroY + BADGE_H / 2, height: ROW_H + ROW_GAP - BADGE_H }}
                 />
               </div>
             );
