@@ -55,6 +55,20 @@ export function getPeriodoMesDoCalendario(inicioSelecionado: string) {
   return { inicio: `${ano}-${pad(mes)}-01`, fim, label: `${MESES_LABEL[mes - 1]} de ${ano}` };
 }
 
+/** Igual a `getPeriodoMesDoCalendario`, mas sem capar o fim em "hoje" — o mês inteiro, dia 1 ao
+ * último dia, mesmo pro mês corrente (dias futuros simplesmente não têm dado nenhum). Usado no
+ * mini-gráfico do Plano de Ação, que precisa mostrar a forma do mês completo, não só até hoje. */
+export function getMesCompletoDoCalendario(inicioSelecionado: string) {
+  const [ano, mes] = inicioSelecionado.split('-').map(Number);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const ultimoDia = new Date(ano, mes, 0).getDate();
+  return {
+    inicio: `${ano}-${pad(mes)}-01`,
+    fim: `${ano}-${pad(mes)}-${pad(ultimoDia)}`,
+    label: `${MESES_LABEL[mes - 1]} de ${ano}`,
+  };
+}
+
 export function contarDiasUteis(periodo: PeriodoFiltro): number {
   const inicio = new Date(periodo.inicio);
   const fim = new Date(periodo.fim);

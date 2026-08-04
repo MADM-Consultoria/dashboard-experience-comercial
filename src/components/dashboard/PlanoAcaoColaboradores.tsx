@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { estaDeFerias } from '@/lib/colaboradoresEmFerias';
 import { ehSupervisor } from '@/lib/colaboradoresAtivos';
 import { useAuth } from '@/context/AuthContext';
-import { listarDiasEntre } from '@/lib/period';
+import { getMesCompletoDoCalendario, listarDiasEntre } from '@/lib/period';
 import { fetchAssinadosDiarioTodos } from '@/lib/assinadosDiarioColaborador';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
@@ -18,18 +18,18 @@ import { calcularMediaEquipe, calcularScoreInteligente, mediaDiaColaborador } fr
 
 const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'excelente'];
 
-/** Do dia 1 até hoje, sempre o mês real corrente (não o filtro do calendário do topo) — o
- * mini-gráfico do card é sobre "como esse colaborador andou no mês", não sobre um período
- * arbitrário que a diretoria esteja olhando em outra tela. */
-function mesAteHoje(): { inicio: string; fim: string } {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const hoje = new Date();
-  const inicio = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-01`;
-  const fim = `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
-  return { inicio, fim };
-}
-
-export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { colaboradores: ColaboradorReal[]; diasUteisPeriodo: number }) {
+export function PlanoAcaoColaboradores({
+  colaboradores,
+  diasUteisPeriodo,
+  inicioPeriodoSelecionado,
+}: {
+  colaboradores: ColaboradorReal[];
+  diasUteisPeriodo: number;
+  /** Data de início do filtro de calendário do topo — o mini-gráfico usa o mês inteiro (dia 1
+   * ao último dia) desse mês, não sempre o mês real corrente, pra respeitar o mesmo filtro que
+   * o resto da tela já usa (as métricas de cada colaborador já vêm filtradas por período). */
+  inicioPeriodoSelecionado: string;
+}) {
   const { sessao } = useAuth();
   const [filtroStatus, setFiltroStatus] = useState<NivelStatus | null>(null);
   const [seriesPorConsultor, setSeriesPorConsultor] = useState<Map<string, number[]>>(new Map());
@@ -46,12 +46,13 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
     (c) => c.ativo && cargosProducao.has(c.cargo.trim().toLowerCase()) && !ehSupervisor(c.nome) && !estaDeFerias(c.nome),
   );
 
-  // Sparklines do mês corrente (dia 1 até hoje) — uma única consulta pra equipe inteira, não
-  // uma por card exibido, pra não multiplicar chamada ao banco por 10-40 colaboradores na tela.
+  // Sparklines do mês inteiro do período filtrado (dia 1 ao último dia) — uma única consulta
+  // pra equipe inteira, não uma por card exibido, pra não multiplicar chamada ao banco por
+  // 10-40 colaboradores na tela.
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
-    const { inicio, fim } = mesAteHoje();
+    const { inicio, fim } = getMesCompletoDoCalendario(inicioPeriodoSelecionado);
     fetchAssinadosDiarioTodos(sessao.token, inicio, fim)
       .then((porConsultor) => {
         if (cancelado) return;
@@ -73,7 +74,7 @@ export function PlanoAcaoColaboradores({ colaboradores, diasUteisPeriodo }: { co
       cancelado = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessao, comProducao.map((c) => c.id).join(',')]);
+  }, [sessao, comProducao.map((c) => c.id).join(','), inicioPeriodoSelecionado]);
 
   const media = useMemo(() => calcularMediaEquipe(comProducao, diasUteisPeriodo), [comProducao, diasUteisPeriodo]);
 
