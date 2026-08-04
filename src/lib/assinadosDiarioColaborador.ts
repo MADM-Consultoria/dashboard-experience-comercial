@@ -47,3 +47,21 @@ export async function fetchAssinadosDiarioColaborador(token: string, nomeColabor
       total: typeof l.total === 'number' ? l.total : Number(l.total) || 0,
     }));
 }
+
+/** Mesma consulta, mas devolve TODO MUNDO agrupado por nome normalizado — usada quando
+ * precisamos da série diária de vários colaboradores ao mesmo tempo (ex: sparklines do
+ * Plano de Ação). Uma chamada só ao banco em vez de uma por colaborador exibido. */
+export async function fetchAssinadosDiarioTodos(token: string, inicio: string, fim: string): Promise<Map<string, AssinadosDiarioColaboradorLinha[]>> {
+  const params = new URLSearchParams({ inicio, fim });
+  const dados = await fetchComRetry(`/.netlify/functions/assinados-diario-colaborador?${params.toString()}`, token);
+
+  const porConsultor = new Map<string, AssinadosDiarioColaboradorLinha[]>();
+  for (const l of dados.dados as LinhaBruta[]) {
+    if (!l.consultor) continue;
+    const chave = normalizarNome(l.consultor);
+    const linha = { dia: typeof l.dia === 'string' ? l.dia.slice(0, 10) : l.dia, total: typeof l.total === 'number' ? l.total : Number(l.total) || 0 };
+    if (!porConsultor.has(chave)) porConsultor.set(chave, []);
+    porConsultor.get(chave)!.push(linha);
+  }
+  return porConsultor;
+}
