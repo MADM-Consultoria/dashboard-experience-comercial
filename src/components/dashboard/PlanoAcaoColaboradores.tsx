@@ -13,8 +13,7 @@ import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 import { CollaboratorCard } from './plano-acao/CollaboratorCard';
 import { RelogioBrasilia } from './plano-acao/RelogioBrasilia';
-import { SummaryCards, type ResumoPlanoAcao } from './plano-acao/SummaryCards';
-import { calcularMediaEquipe, calcularScoreInteligente, mediaDiaColaborador } from './plano-acao/score';
+import { calcularMediaEquipe, calcularScoreInteligente } from './plano-acao/score';
 
 const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'excelente'];
 
@@ -83,27 +82,10 @@ export function PlanoAcaoColaboradores({
     [comProducao, media, diasUteisPeriodo],
   );
 
-  const resumo: ResumoPlanoAcao = useMemo(() => {
-    const precisamAtencao = comScore.filter((x) => x.banda === 'atencao' || x.banda === 'alerta' || x.banda === 'critico').length;
-    const acimaDaMeta = comProducao.filter((c) => c.metaMensal > 0 && c.atingimentoMetaMensal >= 100).length;
-    const semProtocolar = comProducao.filter((c) => c.assinados > 0 && c.protocolados === 0).length;
-    const conversaoBaixa = comProducao.filter((c) => c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5).length;
-    const conversaoMedia = comProducao.length ? comProducao.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / comProducao.length : 0;
-    const mediaDiaEquipe = comProducao.length ? comProducao.reduce((a, c) => a + mediaDiaColaborador(c, diasUteisPeriodo), 0) / comProducao.length : 0;
-    const melhor = [...comScore].sort((a, b) => b.score - a.score)[0] ?? null;
-    const protocolosPendentes = comProducao.reduce((a, c) => a + Math.max(0, c.assinados - c.protocolados), 0);
-
-    return {
-      precisamAtencao,
-      acimaDaMeta,
-      semProtocolar,
-      conversaoBaixa,
-      conversaoMedia,
-      mediaDia: mediaDiaEquipe,
-      melhorColaborador: melhor?.colaborador.nome ?? null,
-      protocolosPendentes,
-    };
-  }, [comScore, comProducao, diasUteisPeriodo]);
+  const precisamAtencao = useMemo(
+    () => comScore.filter((x) => x.banda === 'atencao' || x.banda === 'alerta' || x.banda === 'critico').length,
+    [comScore],
+  );
 
   const linhas = comScore
     .filter((x) => !filtroStatus || x.banda === filtroStatus)
@@ -120,13 +102,11 @@ export function PlanoAcaoColaboradores({
           <RelogioBrasilia />
         </div>
         <p className="text-[13px] text-slate-500">
-          {resumo.precisamAtencao === 0
+          {precisamAtencao === 0
             ? 'Nenhum colaborador precisa de atenção agora.'
-            : `Hoje ${resumo.precisamAtencao === 1 ? 'existe 1 colaborador' : `existem ${resumo.precisamAtencao} colaboradores`} que precisam de atenção.`}
+            : `Hoje ${precisamAtencao === 1 ? 'existe 1 colaborador' : `existem ${precisamAtencao} colaboradores`} que precisam de atenção.`}
         </p>
       </div>
-
-      <SummaryCards resumo={resumo} />
 
       <div className="flex flex-wrap gap-2 mb-5">
         <button
