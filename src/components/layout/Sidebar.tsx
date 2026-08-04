@@ -47,7 +47,10 @@ export function Sidebar() {
         )}
       </div>
 
-      <nav className={clsx('flex-1 overflow-y-auto py-4 space-y-0.5', colapsada ? 'px-2' : 'px-3')}>
+      {/* Sem overflow-y-auto aqui: o CSS obriga overflow-x a virar "auto" junto (não dá pra ter
+         y rolável e x visível ao mesmo tempo), o que criava aquela setinha de scroll horizontal
+         cortando o tooltip. A lista de itens é curta o bastante pra nunca precisar rolar. */}
+      <nav className={clsx('flex-1 py-4 space-y-0.5', colapsada ? 'px-2' : 'px-3')}>
         {itens.map((item) => (
           <NavLink
             key={item.to}
