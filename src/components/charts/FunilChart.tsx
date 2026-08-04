@@ -52,9 +52,17 @@ const ROW_GAP = 12;
 const BAR_H = 56;
 const BADGE_H = 24;
 
+// Larguras fixas por etapa (não proporcionais ao valor real) — decisão visual pra sempre
+// desenhar o mesmo afunilamento, independente de quão perto os números estejam uns dos outros.
+const LARGURA_ETAPA: Record<EtapaFunil['etapa'], number> = {
+  Recebidos: 96,
+  Assinados: 72,
+  Protocolados: 50,
+  'Venda Ganha': 32,
+};
+
 export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
   const total = etapas[0]?.valor || 1;
-  const max = etapas[0]?.valor || 1;
   const alturaTotal = etapas.length * ROW_H + (etapas.length - 1) * ROW_GAP;
 
   return (
@@ -75,7 +83,7 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
           {etapas.map((etapa) => {
             const meta = ETAPA_META[etapa.etapa];
             const Icon = meta.icon;
-            const largura = Math.max(28, (etapa.valor / max) * 100);
+            const largura = LARGURA_ETAPA[etapa.etapa];
             const pctDoTotal = (etapa.valor / total) * 100;
             return (
               <div
