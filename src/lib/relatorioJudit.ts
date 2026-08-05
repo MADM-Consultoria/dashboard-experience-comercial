@@ -1,6 +1,7 @@
 import type { CanalOrigem, ColaboradorMetricas } from '@/types/domain';
 import { classificarStatus, pct } from '@/lib/metrics';
 import { ehColaboradorAtivo, type ColaboradorAtivo } from '@/lib/colaboradoresAtivos';
+import { ehJuditReal } from '@/lib/colaboradoresJuditReal';
 
 /**
  * Linha crua de `madm.view_relatorio_judit`, como o Postgres devolve (chaves
@@ -138,12 +139,17 @@ export function mapRowParaColaborador(row: RelatorioJuditRow): ColaboradorReal {
   // Canal vem da Classificação Operacional (cargo), não de ter tido algum
   // "Assinados Judit" > 0 no mês — isso classificava errado quem é Discador(a)
   // mas pegou um lead Judit avulso, ou quem é Judit mas zerou no mês.
-  const canal: CanalOrigem = row['Classificação Operacional']?.toLowerCase().includes('judit') ? 'Judit' : 'Discadora';
+  // Exceção: NOMES_JUDIT_REAL (conferida manualmente com a operação via SELECT em
+  // madm.kommo_leads) sobrescreve a Classificação Operacional pra quem está desatualizada
+  // na view — aparecem como "Discadora" lá mesmo trabalhando majoritariamente com leads Judit.
+  const ehJudit = ehJuditReal(row.Colaborador) || row['Classificação Operacional']?.toLowerCase().includes('judit');
+  const canal: CanalOrigem = ehJudit ? 'Judit' : 'Discadora';
+  const cargo = ehJuditReal(row.Colaborador) ? 'Judit' : row['Classificação Operacional'];
 
   return {
     id: slug(row.Colaborador) || row.Colaborador,
     nome: row.Colaborador,
-    cargo: row['Classificação Operacional'],
+    cargo,
     time: row.Equipe,
     canal,
     ativo: ehColaboradorAtivo(row.Colaborador),
