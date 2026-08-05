@@ -130,6 +130,42 @@ function diagnosticoCombinado(c: ColaboradorReal, media: MediaEquipe): string | 
   return null;
 }
 
+/** Escolhe determinístico (mesma pessoa sempre cai na mesma opção, mas pessoas diferentes
+ * caem em opções diferentes) — usado só quando não sobra nenhum dado real que distinga um
+ * caso do outro, pra pelo menos não repetir a MESMA frase literal em cards vizinhos. */
+function escolherPor(id: string, opcoes: string[]): string {
+  let soma = 0;
+  for (let i = 0; i < id.length; i++) soma += id.charCodeAt(i);
+  return opcoes[soma % opcoes.length];
+}
+
+/**
+ * Frase de "zerou os assinados, mas o score ainda tá bom" — em vez de um único template com
+ * só o número trocando (que em times grandes acaba repetindo a MESMA frase pra várias
+ * pessoas), busca no resto dos dados reais do colaborador algo que distinga esse caso
+ * especificamente: protocolados também zerados, conversão fora do normal, ou poucos leads
+ * recebidos. Só cai no fallback (variado por pessoa) quando nada mais se destaca.
+ */
+function complementoZerouBandaBoa(c: ColaboradorReal, media: MediaEquipe): string {
+  if (c.protocolados === 0) {
+    return ' Também não protocolou nada esse mês — vale conferir os dois pontos na mesma conversa.';
+  }
+  if (c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5) {
+    return ` A conversão geral também está baixa (${formatPct(c.conversaoRecebidosAssinados, 1)}), então talvez não seja só uma pausa.`;
+  }
+  if (c.conversaoRecebidosAssinados > 20) {
+    return ` A conversão geral segue alta (${formatPct(c.conversaoRecebidosAssinados, 1)}), o que reforça que deve ser mesmo só uma pausa pontual.`;
+  }
+  if (media.recebidos > 0 && c.recebidos < media.recebidos * 0.5) {
+    return ` Também recebeu poucos leads esse mês (${formatNumero(c.recebidos)}, bem abaixo da média da equipe) — pode ser parte da explicação.`;
+  }
+  return escolherPor(c.id, [
+    ' Vale só confirmar se é pausa pontual (férias, mudança de carteira) antes de virar uma queda de verdade.',
+    ' Sem nenhum outro número fora do lugar — provavelmente é só uma pausa; uma conversa rápida já tira a dúvida.',
+    ' O resto dos números segue normal, então é mais provável que seja algo pontual do que uma queda real.',
+  ]);
+}
+
 /**
  * "IA Recomenda" — motor de regras 100% baseado em dados reais do colaborador, sempre citando
  * os números concretos do caso (nunca uma frase genérica que sirva pra qualquer um) e uma ação
@@ -188,8 +224,9 @@ export function gerarRecomendacoesIA(
     let mensagem: string;
     if (zerou && bandaBoa) {
       // Score ainda bom mas zerou de vez — provavelmente pausa pontual (férias, licença,
-      // trocou de carteira), não desempenho ruim. Tom de checagem, não de cobrança.
-      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas o score (${score}) ainda está em ${BANDA_LABEL[banda].split(' · ')[1].toLowerCase()}. Vale só confirmar se é pausa pontual (férias, mudança de carteira) antes de virar uma queda de verdade.`;
+      // trocou de carteira), não desempenho ruim. O complemento busca algo real que distinga
+      // esse caso do de outra pessoa na mesma situação, em vez de repetir a mesma frase.
+      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas o score (${score}) ainda está em ${BANDA_LABEL[banda].split(' · ')[1].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
     } else if (zerou) {
       mensagem = `Zerou os assinados na 2ª metade do mês depois de ${antes} na 1ª, e o score (${score}) já reflete isso. Conversa individual essa semana pra entender a causa antes que o mês feche assim.`;
     } else if (quedaPct >= 50) {
