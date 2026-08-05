@@ -51,8 +51,8 @@ const BAR_H = 56;
 const LARGURA_ETAPA: Record<EtapaFunil['etapa'], number> = {
   Recebidos: 96,
   Assinados: 72,
-  Protocolados: 50,
-  'Venda Ganha': 32,
+  'Venda Ganha': 50,
+  Protocolados: 32,
 };
 
 interface FunilChartProps {

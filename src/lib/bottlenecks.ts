@@ -5,13 +5,17 @@ export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): Et
   return [
     { etapa: 'Recebidos', valor: kpi.totalRecebidos, taxaConversaoEtapaAnterior: null },
     { etapa: 'Assinados', valor: kpi.totalAssinados, taxaConversaoEtapaAnterior: kpi.taxaConversaoGeral > 0 ? (kpi.totalAssinados / (kpi.totalRecebidos || 1)) * 100 : 0 },
-    { etapa: 'Protocolados', valor: kpi.totalProtocolados, taxaConversaoEtapaAnterior: (kpi.totalProtocolados / (kpi.totalAssinados || 1)) * 100 },
-    // Venda Ganha não é estritamente posterior a Protocolados dentro do mesmo período filtrado
-    // (a data de protocolo e a de venda ganha são colunas independentes — um caso pode ganhar
-    // a venda num mês tendo sido protocolado num mês anterior), então dividir pelo total de
-    // Protocolados do período pode passar de 100% e não faz sentido pra quem está lendo. Em vez
-    // disso, mostra a taxa de conversão geral: quantos % dos Recebidos viraram Venda Ganha.
-    { etapa: 'Venda Ganha', valor: totalVendaGanha, taxaConversaoEtapaAnterior: (totalVendaGanha / (kpi.totalRecebidos || 1)) * 100 },
+    // Venda Ganha antes de Protocolados na exibição (pedido) — sua própria taxa continua
+    // Assinados → Venda Ganha, que é uma comparação direta e sempre coerente (≤100% na
+    // prática).
+    { etapa: 'Venda Ganha', valor: totalVendaGanha, taxaConversaoEtapaAnterior: (totalVendaGanha / (kpi.totalAssinados || 1)) * 100 },
+    // Protocolados não é estritamente posterior a Venda Ganha dentro do mesmo período filtrado
+    // (a data de protocolo e a de venda ganha são colunas independentes de kommo_leads — um
+    // caso pode ganhar a venda num mês tendo sido protocolado num mês anterior, ou vice-versa),
+    // então dividir pelo total de Venda Ganha do período pode passar de 100% e não faz sentido
+    // pra quem está lendo. Em vez disso, mostra a taxa de conversão geral: quantos % dos
+    // Recebidos viraram Protocolados.
+    { etapa: 'Protocolados', valor: kpi.totalProtocolados, taxaConversaoEtapaAnterior: (kpi.totalProtocolados / (kpi.totalRecebidos || 1)) * 100 },
   ];
 }
 
