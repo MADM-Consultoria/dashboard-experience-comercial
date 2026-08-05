@@ -53,7 +53,9 @@ export function CollaboratorCard({
   // `?? 0`: se "hoje" está na série mas o dado daquele índice ainda não chegou (ex: fetch de
   // protocolados terminando depois do de assinados), zero é o valor correto — não "sem dado".
   // "Sem dado" é só quando hoje nem está no período filtrado (indiceHoje === -1).
-  const numQuadradosAssinados = c.metaMensal > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaMensal / diasUteisTotaisMes)) : 0;
+  // Assinados sempre com 4 quadrados fixos em todos os cards (decisão visual — não varia
+  // conforme a meta de cada colaborador, diferente de Protocolados).
+  const numQuadradosAssinados = 4;
   const assinadosHoje = indiceHoje >= 0 ? serieUltimosDias[indiceHoje] ?? 0 : undefined;
 
   const numQuadradosProtocolados = c.metaProtocolados > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaProtocolados / diasUteisTotaisMes)) : 0;
