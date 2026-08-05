@@ -2,11 +2,12 @@ import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 import { formatNumero, formatPct } from '@/lib/format';
 
-/** Médias reais da equipe (do grupo em produção que entra no Plano de Ação) — usadas só
- * internamente pro Score Inteligente e pra "IA Recomenda" (Protocolados, Média/Dia). Recebidos
- * e Conversão não têm média exibida no card — são valores que dependem só da distribuição de
- * leads, não de esforço do colaborador, então comparar com a equipe seria enganoso. */
+/** Médias reais da equipe (do grupo em produção que entra no Plano de Ação). `recebidos` não
+ * vira barra de comparação no card (depende da distribuição de leads, não do colaborador),
+ * mas é um número real e continua útil como referência interna pro diagnóstico combinado da
+ * IA — "recebeu pouco/muito lead" só faz sentido comparado com o que o resto da equipe recebeu. */
 export interface MediaEquipe {
+  recebidos: number;
   protocolados: number;
   mediaDia: number;
 }
@@ -14,6 +15,7 @@ export interface MediaEquipe {
 export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisPeriodo: number): MediaEquipe {
   const n = colaboradores.length || 1;
   return {
+    recebidos: colaboradores.reduce((a, c) => a + c.recebidos, 0) / n,
     protocolados: colaboradores.reduce((a, c) => a + c.protocolados, 0) / n,
     mediaDia: diasUteisPeriodo > 0 ? colaboradores.reduce((a, c) => a + c.assinados, 0) / diasUteisPeriodo / n : 0,
   };
@@ -74,6 +76,60 @@ export function calcularTendenciaSerie(serie: number[]): 'subindo' | 'caindo' | 
   return 'estavel';
 }
 
+type Nivel = 'baixo' | 'medio' | 'alto';
+
+/** Compara um valor real com a média real da equipe — abaixo de 60% da média é "baixo", acima
+ * de 140% é "alto", o resto é "médio". Usado só pra cruzar Recebidos/Assinados/Protocolados
+ * entre si no diagnóstico combinado; nunca vira um número exibido sozinho. */
+function nivelRelativo(valor: number, media: number): Nivel {
+  if (media <= 0) return valor > 0 ? 'alto' : 'medio';
+  const razao = valor / media;
+  if (razao < 0.6) return 'baixo';
+  if (razao > 1.4) return 'alto';
+  return 'medio';
+}
+
+/**
+ * Cruza Recebidos × Assinados × Protocolados do colaborador (cada um comparado com sua própria
+ * referência real — Recebidos e Protocolados com a média da equipe, Assinados com a meta real)
+ * pra identificar QUAL combinação específica está acontecendo — o mesmo "assinou pouco" tem
+ * causa (e ação) completamente diferente se veio de pouco lead, de má conversão com lead de
+ * sobra, ou de represamento no protocolo. Sem isso, dois colaboradores com problemas opostos
+ * recebiam a mesma recomendação genérica só porque um número batia com um limiar isolado.
+ */
+function diagnosticoCombinado(c: ColaboradorReal, media: MediaEquipe): string | null {
+  const nivelRecebidos = nivelRelativo(c.recebidos, media.recebidos);
+  const nivelAssinados: Nivel = c.metaMensal > 0 ? (c.atingimentoMetaMensal < 60 ? 'baixo' : c.atingimentoMetaMensal > 100 ? 'alto' : 'medio') : 'medio';
+  const nivelProtocolados: Nivel = c.assinados > 0 && c.protocolados === 0 ? 'baixo' : nivelRelativo(c.protocolados, media.protocolados);
+
+  // Recebeu pouco, mas mesmo assim assina bem — o problema está em protocolar, não em vender.
+  if (nivelRecebidos === 'baixo' && nivelAssinados !== 'baixo' && nivelProtocolados === 'baixo') {
+    return `Recebeu só ${formatNumero(c.recebidos)} leads (média da equipe é ${media.recebidos.toFixed(1)}), mas mesmo com pouco volume assinou bem (${formatNumero(c.assinados)}). O gargalo real está em protocolar: só ${formatNumero(c.protocolados)} protocolado(s) até agora. Priorizar o protocolo dos casos já assinados antes de pedir mais leads pra essa pessoa.`;
+  }
+
+  // Recebeu muito lead, mas converte pouco em assinatura — e o pouco que assina, protocola bem.
+  if (nivelRecebidos === 'alto' && nivelAssinados === 'baixo' && nivelProtocolados !== 'baixo') {
+    return `Recebeu bastante lead (${formatNumero(c.recebidos)}, acima da média de ${media.recebidos.toFixed(1)} da equipe), mas converteu pouco em assinatura (${formatNumero(c.assinados)}). O que assina, no entanto, quase sempre vira protocolo (${formatNumero(c.protocolados)}) — a execução depois da venda está boa, o problema é a conversão do lead em contrato. Revisar a abordagem comercial, não a carga de leads.`;
+  }
+
+  // Assina bem (ou acima da meta), mas protocola muito abaixo da equipe — funil represado.
+  if (nivelAssinados !== 'baixo' && nivelProtocolados === 'baixo') {
+    return `Assinou ${formatNumero(c.assinados)} — dentro ou acima do esperado —, mas protocolou só ${formatNumero(c.protocolados)}, bem abaixo da média da equipe (${media.protocolados.toFixed(1)}). O funil está represado na etapa de protocolo, não na de vendas. Separar um bloco de tempo essa semana só pra colocar os casos assinados em dia.`;
+  }
+
+  // Assina pouco, mas o pouco que assina vira protocolo acima da média — execução ótima, falta volume.
+  if (nivelAssinados === 'baixo' && nivelProtocolados === 'alto') {
+    return `Assinou pouco (${formatNumero(c.assinados)}, abaixo da meta), mas o que assina protocola quase todo — ${formatNumero(c.protocolados)} protocolados, acima da média da equipe (${media.protocolados.toFixed(1)}). A execução depois da assinatura está ótima; o problema é volume de entrada. Avaliar se falta lead na carteira ou se é ritmo de abordagem.`;
+  }
+
+  // Recebeu pouco lead E assina pouco — problema pode não ser do colaborador, é distribuição.
+  if (nivelRecebidos === 'baixo' && nivelAssinados === 'baixo' && nivelProtocolados !== 'baixo') {
+    return `Recebeu só ${formatNumero(c.recebidos)} leads no período (média da equipe é ${media.recebidos.toFixed(1)}) — o volume baixo de assinados (${formatNumero(c.assinados)}) pode ser reflexo direto disso, não de desempenho: o que assina, protocola bem (${formatNumero(c.protocolados)}). Avaliar redistribuição de carteira antes de cobrar volume.`;
+  }
+
+  return null;
+}
+
 /**
  * "IA Recomenda" — motor de regras 100% baseado em dados reais do colaborador, sempre citando
  * os números concretos do caso (nunca uma frase genérica que sirva pra qualquer um) e uma ação
@@ -92,7 +148,13 @@ export function gerarRecomendacoesIA(
   const recomendacoes: string[] = [];
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
 
-  if (c.assinados > 0 && c.protocolados === 0) {
+  // Cruza Recebidos × Assinados × Protocolados primeiro — cobre os casos onde o mesmo "número
+  // baixo" tem causas opostas (pouco lead vs. má conversão vs. represamento no protocolo). Só
+  // cai nos checks isolados abaixo se nenhuma combinação específica se encaixar.
+  const diagnostico = diagnosticoCombinado(c, media);
+  if (diagnostico) {
+    recomendacoes.push(diagnostico);
+  } else if (c.assinados > 0 && c.protocolados === 0) {
     recomendacoes.push(
       `${formatNumero(c.assinados)} contrato${c.assinados === 1 ? '' : 's'} assinado${c.assinados === 1 ? '' : 's'} e nenhum protocolado ainda. Separar um horário hoje só pra protocolar esses casos antes de captar mais leads.`,
     );
