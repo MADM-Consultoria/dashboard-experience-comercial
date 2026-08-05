@@ -235,12 +235,15 @@ export default function VisaoGeral() {
               <Link
                 key={t.time}
                 to={`/equipe/${encodeURIComponent(t.time)}`}
+                title={`Taxa = Protocolados ÷ Assinados: ${formatNumero(t.protocolados)} protocolados ÷ ${formatNumero(t.assinados)} assinados = ${formatPct(t.taxa)}.`}
                 className="grid grid-cols-[1fr_auto_auto] items-center gap-4 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 hover:bg-slate-100 transition-colors"
               >
                 <span className="text-[13px] font-medium text-slate-700 truncate">
                   {t.time} <span className="text-slate-400 font-normal">· {t.pessoas} {t.pessoas === 1 ? 'pessoa' : 'pessoas'}</span>
                 </span>
-                <span className="text-[13px] text-slate-600 text-right whitespace-nowrap w-28">{formatNumero(t.protocolados)} protocolados</span>
+                <span className="text-[13px] text-slate-600 text-right whitespace-nowrap w-36">
+                  {formatNumero(t.protocolados)} <span className="text-slate-400">/ {formatNumero(t.assinados)} assinados</span>
+                </span>
                 <span className="text-[13px] font-semibold text-slate-900 text-right whitespace-nowrap w-14">{formatPct(t.taxa)}</span>
               </Link>
             ))}
