@@ -27,15 +27,15 @@ export function AlertCard({ alerta }: { alerta: AlertaInteligente }) {
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${cor}1a`, color: cor }}>
         <AlertOctagon size={15} />
       </div>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+            className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
             style={{ color: cor, backgroundColor: `${cor}1a` }}
           >
             {PRIORIDADE_LABEL[alerta.prioridade]}
           </span>
-          <span className="text-sm font-semibold text-slate-900 truncate">{alerta.colaboradorNome}</span>
+          <span className="min-w-0 truncate text-sm font-semibold text-slate-900">{alerta.colaboradorNome}</span>
         </div>
         <p className="mt-0.5 text-[12.5px] text-slate-600 truncate">{TITULO_TIPO[alerta.tipo]} — {valorExibido}</p>
       </div>
