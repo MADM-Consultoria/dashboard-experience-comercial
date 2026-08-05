@@ -57,8 +57,13 @@ export default function VisaoGeral() {
     assinados: assinadosJuditPorConsultor.get(normalizarNome(c.nome)) ?? 0,
   }));
 
-  const metaMensalGeral = kpi.metaMensalEquipe;
-  const metaMensalJudit = colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0);
+  // META PROVISÓRIA: madm.view_relatorio_judit está com 0 linhas no banco agora, então nenhum
+  // colaborador tem metaMensal real (todos vêm sintéticos, meta 0) até a view voltar a ser
+  // populada. Combinado com a operação: usar 2.000 fixo pros dois cards enquanto isso, só pra
+  // o pace/projeção terem uma referência real pra calcular em cima — trocar pela soma real das
+  // metas assim que a view voltar a ter dado (é só remover o "|| 2000").
+  const metaMensalGeral = kpi.metaMensalEquipe || 2000;
+  const metaMensalJudit = colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0) || 2000;
 
   const paceEquipe = calcularPaceProjecao(totalAssinadosGeral, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const statusPaceEquipe = classificarPace(paceEquipe, metaMensalGeral);
