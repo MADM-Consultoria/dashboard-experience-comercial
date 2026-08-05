@@ -194,6 +194,11 @@ export function useIntelligence(periodoFixo?: { inicio: string; fim: string; lab
     insights,
     funil,
     gargalos,
+    // Quem assinou pela definição oficial de Judit (sdr = 'Judit' no lead) — não é a mesma
+    // coisa que "colaborador classificado como canal Judit no cadastro": um lead Judit pode
+    // ter sido assinado por qualquer consultor, e o inverso também. O modal "Judit · Assinados"
+    // precisa desse mapa pra listar quem contribuiu de verdade, não filtrar pelo cargo.
+    assinadosJuditPorConsultor: assinadosJuditPeriodo.porConsultor,
     loading: loadingRelatorio || loadingPeriodo,
     error: errorRelatorio ?? errorPeriodo,
   };

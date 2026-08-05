@@ -12,12 +12,13 @@ import { DetalheAssinadosModal } from '@/components/dashboard/DetalheAssinadosMo
 import { useIntelligence } from '@/lib/useIntelligence';
 import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
 import { contarDiasUteis, getPeriodoMesDoCalendario } from '@/lib/period';
+import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { formatNumero, formatPct } from '@/lib/format';
 import { ehSupervisor } from '@/lib/colaboradoresAtivos';
 import { Link } from 'react-router-dom';
 
 export default function VisaoGeral() {
-  const { periodoSelecionado, diasUteisTotaisMes, diasUteisDecorridos, kpi, vendaGanhaTotal, funil, alertas, colaboradores, loading, error } = useIntelligence();
+  const { periodoSelecionado, diasUteisTotaisMes, diasUteisDecorridos, kpi, vendaGanhaTotal, funil, alertas, colaboradores, assinadosJuditPorConsultor, loading, error } = useIntelligence();
   // "Melhor colaborador"/"Precisa de atenção" sempre olham pro MÊS INTEIRO (não um dia/intervalo
   // curto) — mas o mês em questão é o mesmo que está selecionado no calendário do topo (igual
   // ao Ranking), pra bater com o que a pessoa está filtrando em vez de ficar preso no mês real
@@ -44,6 +45,17 @@ export default function VisaoGeral() {
 
   const totalAssinadosGeral = kpi.totalAssinados;
   const totalAssinadosJudit = kpi.totalAssinadosJudit;
+
+  // "Judit · Assinados" é definido por sdr = 'Judit' no lead (madm.kommo_leads), não pelo
+  // cargo/canal do colaborador no cadastro — um lead Judit pode ter sido assinado por
+  // qualquer consultor, então filtrar por colaboradoresJudit (canal) e usar o `.assinados`
+  // geral da pessoa dava um total sem relação nenhuma com os 24/48/etc. reais. Aqui troca o
+  // `.assinados` de cada colaborador pelo valor específico dele nessa definição oficial —
+  // olhando TODO MUNDO, não só quem está classificado como canal Judit.
+  const contribuintesJudit = colaboradores.map((c) => ({
+    ...c,
+    assinados: assinadosJuditPorConsultor.get(normalizarNome(c.nome)) ?? 0,
+  }));
 
   const metaMensalGeral = kpi.metaMensalEquipe;
   const metaMensalJudit = colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0);
@@ -134,7 +146,7 @@ export default function VisaoGeral() {
       {modalAberto === 'judit' && (
         <DetalheAssinadosModal
           titulo="Judit · Assinados"
-          colaboradores={colaboradoresJudit}
+          colaboradores={contribuintesJudit}
           atual={totalAssinadosJudit}
           onFechar={() => setModalAberto(null)}
         />
