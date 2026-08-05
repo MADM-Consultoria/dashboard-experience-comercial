@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import type { NivelStatus, PaceProjecao } from '@/types/domain';
-import { formatNumero, STATUS_COLOR } from '@/lib/format';
+import type { PaceProjecao } from '@/types/domain';
+import { formatNumero } from '@/lib/format';
 
 interface ResumoMesCardProps {
   titulo: string;
@@ -10,12 +10,11 @@ interface ResumoMesCardProps {
   atual: number;
   meta: number;
   pace: PaceProjecao;
-  statusPace: NivelStatus;
   onClick?: () => void;
 }
 
-/** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + projeção, no estilo do resumo-mês. */
-export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, onClick }: ResumoMesCardProps) {
+/** Card executivo "Geral/Judit · Assinados": progresso do mês + pace, no estilo do resumo-mês. */
+export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
 
   return (
@@ -63,14 +62,6 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
           <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
         </div>
       </div>
-
-      <p className="mt-3 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
-        Projeção ao fim do mês: <span className="font-semibold text-slate-700">{formatNumero(pace.projecao)}</span> · gap de{' '}
-        <span className="font-semibold" style={{ color: STATUS_COLOR[statusPace] }}>
-          {pace.gap >= 0 ? '+' : ''}{formatNumero(pace.gap)}
-        </span>{' '}
-        vs meta
-      </p>
     </Card>
   );
 }

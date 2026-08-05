@@ -4,7 +4,7 @@ import { MetaAtingimentoChart, TaxaProtocoladosChart, RankingProdutividadeLollip
 import { KpiCard } from '@/components/kpi/KpiCard';
 import { ResumoMesCard } from '@/components/kpi/ResumoMesCard';
 import { useIntelligence } from '@/lib/useIntelligence';
-import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
+import { calcularPaceProjecao } from '@/lib/diagnostico';
 import { formatNumero, formatPct } from '@/lib/format';
 import { Activity, FileStack, Gauge, TrendingUp } from 'lucide-react';
 
@@ -18,10 +18,7 @@ export default function Comercial() {
   const metaMensalJudit = kpi.metaMensalEquipe;
 
   const paceEquipe = calcularPaceProjecao(kpi.totalAssinados, kpi.metaMensalEquipe, diasUteisDecorridos, diasUteisTotaisMes);
-  const statusPaceEquipe = classificarPace(paceEquipe, kpi.metaMensalEquipe);
-
   const paceJudit = calcularPaceProjecao(assinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
-  const statusPaceJudit = classificarPace(paceJudit, metaMensalJudit);
 
   if (loading) {
     return (
@@ -46,10 +43,10 @@ export default function Comercial() {
 
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4 mb-6">
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={kpi.metaMensalEquipe} pace={paceEquipe} statusPace={statusPaceEquipe} />
+          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={kpi.metaMensalEquipe} pace={paceEquipe} />
         </div>
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} statusPace={statusPaceJudit} />
+          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} />
         </div>
         <div className="xl:col-span-2 grid grid-cols-2 gap-4">
           <KpiCard titulo="Recebidos no período" valor={formatNumero(kpi.totalRecebidos)} icon={FileStack} accent="info" />
