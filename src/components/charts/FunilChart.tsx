@@ -42,13 +42,9 @@ const ETAPA_META: Record<EtapaFunil['etapa'], EtapaMeta> = {
   },
 };
 
-// Cada etapa ocupa exatamente ROW_H px nas 2 colunas (cards da etapa | pílula de conversão) —
-// são 2 empilhamentos flex INDEPENDENTES com a MESMA altura fixa por item, então a linha i cai
-// sempre no mesmo pixel nas duas colunas, garantido pela estrutura e não por coincidência.
 const ROW_H = 88;
 const ROW_GAP = 12;
 const BAR_H = 56;
-const BADGE_H = 24;
 
 // Larguras fixas por etapa (não proporcionais ao valor real) — decisão visual pra sempre
 // desenhar o mesmo afunilamento, independente de quão perto os números estejam uns dos outros.
@@ -59,9 +55,25 @@ const LARGURA_ETAPA: Record<EtapaFunil['etapa'], number> = {
   'Venda Ganha': 32,
 };
 
-export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
-  const total = etapas[0]?.valor || 1;
+interface FunilChartProps {
+  etapas: EtapaFunil[];
+  /** Assinados ÷ Recebidos do período. */
+  conversaoGeral: number;
+  /** Assinados ÷ Recebidos, só do canal Judit. */
+  conversaoJudit: number;
+  /** Protocolados ÷ Assinados do período. */
+  conversaoProtocolados: number;
+}
+
+export function FunilChart({ etapas, conversaoGeral, conversaoJudit, conversaoProtocolados }: FunilChartProps) {
   const alturaTotal = etapas.length * ROW_H + (etapas.length - 1) * ROW_GAP;
+  const taxas = [
+    { label: 'Conversão Geral', valor: conversaoGeral, cor: '#3B82F6' },
+    { label: 'Conversão Judit', valor: conversaoJudit, cor: '#F59E0B' },
+    { label: 'Conversão Protocolados', valor: conversaoProtocolados, cor: '#84CC16' },
+  ];
+  // Distribui as 3 taxas espaçadas uniformemente ao longo da mesma altura da pilha de etapas.
+  const espacamento = alturaTotal / (taxas.length + 1);
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 p-5">
@@ -82,7 +94,6 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
             const meta = ETAPA_META[etapa.etapa];
             const Icon = meta.icon;
             const largura = LARGURA_ETAPA[etapa.etapa];
-            const pctDoTotal = (etapa.valor / total) * 100;
             return (
               <div
                 key={etapa.etapa}
@@ -99,7 +110,7 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
 
                 <div className="flex-1 min-w-0 flex items-center justify-center">
                   <div
-                    className="flex flex-col items-center justify-center text-white transition-[width] duration-500"
+                    className="flex items-center justify-center text-white transition-[width] duration-500"
                     style={{
                       width: `${largura}%`,
                       height: BAR_H,
@@ -108,7 +119,6 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
                     }}
                   >
                     <span className="font-bold leading-tight" style={{ fontSize: 24 }}>{formatNumero(etapa.valor)}</span>
-                    <span className="leading-tight" style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{formatPct(pctDoTotal, 1)}</span>
                   </div>
                 </div>
               </div>
@@ -116,45 +126,24 @@ export function FunilChart({ etapas }: { etapas: EtapaFunil[] }) {
           })}
         </div>
 
-        {/* Pílulas de conversão estágio a estágio + linha pontilhada guia */}
-        <div className="relative shrink-0" style={{ width: 74, height: alturaTotal }}>
+        {/* 3 taxas de conversão gerais do período — não são mais por etapa do funil */}
+        <div className="relative shrink-0" style={{ width: 90, height: alturaTotal }}>
           <p className="absolute text-center w-full text-slate-500" style={{ top: -20, fontSize: 11 }}>Taxa de conversão</p>
-          {etapas.map((etapa, i) => {
-            const proxima = etapas[i + 1];
-            if (!proxima) return null;
-            const corProxima = ETAPA_META[proxima.etapa].iconColor;
-            const centroY = i * (ROW_H + ROW_GAP) + ROW_H / 2;
-            // A conversão de Protocolados → Venda Ganha não é sequencial dentro do mesmo período
-            // filtrado (datas de colunas independentes), então em vez de dividir pelo total de
-            // Protocolados (que pode passar de 100%), o valor já vem calculado como % sobre o
-            // total de Recebidos — a taxa de conversão geral do funil. Só o texto do tooltip muda.
-            const ehUltimaEtapa = !etapas[i + 2];
-            const titulo = ehUltimaEtapa
-              ? `Taxa de conversão geral: % dos Recebidos que viraram Venda Ganha (não é só sobre Protocolados, pois as datas de protocolo e de venda ganha são independentes).`
-              : `% de "${etapa.etapa}" que virou "${proxima.etapa}".`;
-            return (
-              <div key={etapa.etapa}>
-                <span
-                  title={titulo}
-                  className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold whitespace-nowrap"
-                  style={{
-                    top: centroY,
-                    fontSize: 12,
-                    borderRadius: 16,
-                    padding: '4px 10px',
-                    color: corProxima,
-                    backgroundColor: `${corProxima}26`,
-                  }}
-                >
-                  {formatPct(proxima.taxaConversaoEtapaAnterior ?? 0, 1)}
-                </span>
-                <div
-                  className="absolute left-1/2 border-l border-dashed border-slate-300 dark:border-slate-600"
-                  style={{ top: centroY + BADGE_H / 2, height: ROW_H + ROW_GAP - BADGE_H }}
-                />
-              </div>
-            );
-          })}
+          {taxas.map((t, i) => (
+            <div
+              key={t.label}
+              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
+              style={{ top: espacamento * (i + 1) }}
+            >
+              <span className="text-center leading-tight text-slate-500" style={{ fontSize: 10 }}>{t.label}</span>
+              <span
+                className="font-semibold whitespace-nowrap"
+                style={{ fontSize: 12, borderRadius: 16, padding: '4px 10px', color: t.cor, backgroundColor: `${t.cor}26` }}
+              >
+                {formatPct(t.valor, 1)}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

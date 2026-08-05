@@ -179,7 +179,12 @@ export default function VisaoGeral() {
         </Card>
 
         <div className="xl:col-span-3">
-          <FunilChart etapas={funil} />
+          <FunilChart
+            etapas={funil}
+            conversaoGeral={conversaoGeralPeriodo}
+            conversaoJudit={conversaoJuditPeriodo}
+            conversaoProtocolados={kpi.taxaProtocolados}
+          />
         </div>
       </div>
 
