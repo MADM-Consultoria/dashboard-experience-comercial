@@ -28,6 +28,14 @@ export default function ColaboradorDetalhe() {
   const rankingGeral = calcularRanking(colaboradores, 'geral');
   const posicao = rankingGeral.find((r) => r.colaborador.id === id)?.posicao;
 
+  // Vindo de um alerta crítico (Visão Geral), o link já chega com #gargalos-colaborador —
+  // rola direto pro card de Recomendações/Gargalos em vez de deixar a pessoa procurar na
+  // página. Só depois que o colaborador carrega, senão o elemento ainda não existe no DOM.
+  useEffect(() => {
+    if (!colaborador || window.location.hash !== '#gargalos-colaborador') return;
+    document.getElementById('gargalos-colaborador')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [colaborador]);
+
   // Segue o mês do que está selecionado no calendário do topo (igual ao Ranking) — não o
   // mês real do sistema, senão o gráfico fica quase vazio quando o mês corrente mal começou
   // mas a diretoria está olhando um mês anterior filtrado.
@@ -250,7 +258,7 @@ export default function ColaboradorDetalhe() {
           <RadarPerformance colaborador={colaborador} media={colaboradores} />
         </Card>
 
-        <Card className="xl:col-span-2">
+        <Card id="gargalos-colaborador" className="xl:col-span-2 scroll-mt-20">
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-sm font-semibold text-slate-700">Recomendações</h3>
             <StatusPill status={colaborador.status} />

@@ -24,7 +24,13 @@ export default function VisaoGeral() {
   // do sistema.
   const periodoMesSelecionado = getPeriodoMesDoCalendario(periodoSelecionado.inicio);
   const { kpi: kpiMesAtual } = useIntelligence(periodoMesSelecionado);
-  const alertasCriticos = alertas.filter((a) => a.prioridade === 'critico').slice(0, 2);
+  // Um colaborador pode disparar mais de um alerta crítico ao mesmo tempo (ex: venda ganha
+  // baixa E taxa de protocolados baixa) — aqui só queremos o card de destaque, um por pessoa,
+  // não repetir o mesmo nome duas vezes num espaço que só mostra 2.
+  const alertasCriticos = alertas
+    .filter((a) => a.prioridade === 'critico')
+    .filter((a, i, arr) => arr.findIndex((x) => x.colaboradorId === a.colaboradorId) === i)
+    .slice(0, 2);
   const [modalAberto, setModalAberto] = useState<'geral' | 'judit' | null>(null);
   const diasUteisPeriodoSelecionado = contarDiasUteis({ inicio: periodoSelecionado.inicio, fim: periodoSelecionado.fim, label: '' });
 

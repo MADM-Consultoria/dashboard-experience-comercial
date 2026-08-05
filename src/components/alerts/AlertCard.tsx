@@ -21,7 +21,7 @@ export function AlertCard({ alerta }: { alerta: AlertaInteligente }) {
 
   return (
     <Link
-      to={`/colaboradores/${alerta.colaboradorId}`}
+      to={`/colaboradores/${alerta.colaboradorId}#gargalos-colaborador`}
       className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 hover:bg-slate-100 transition-colors"
     >
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${cor}1a`, color: cor }}>
