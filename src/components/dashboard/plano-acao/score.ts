@@ -10,6 +10,9 @@ export interface MediaEquipe {
   recebidos: number;
   protocolados: number;
   mediaDia: number;
+  /** Só usada como fallback do componente "Assinados" do Score pra quem não tem meta
+   * cadastrada (ver calcularScoreInteligente) — não vira barra de comparação no card. */
+  assinados: number;
 }
 
 export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisPeriodo: number): MediaEquipe {
@@ -18,6 +21,7 @@ export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisP
     recebidos: colaboradores.reduce((a, c) => a + c.recebidos, 0) / n,
     protocolados: colaboradores.reduce((a, c) => a + c.protocolados, 0) / n,
     mediaDia: diasUteisPeriodo > 0 ? colaboradores.reduce((a, c) => a + c.assinados, 0) / diasUteisPeriodo / n : 0,
+    assinados: colaboradores.reduce((a, c) => a + c.assinados, 0) / n,
   };
 }
 
@@ -28,6 +32,17 @@ export function mediaDiaColaborador(c: ColaboradorReal, diasUteisPeriodo: number
 export interface ScoreResultado {
   score: number; // 0-100
   banda: NivelStatus;
+  /** Sub-notas 0-100 de cada componente antes do peso — só pra montar um tooltip auditável
+   * (mostrar exatamente de onde veio o número quando alguém questionar o score de alguém). */
+  detalhe: {
+    conversaoScore: number;
+    protocoladosScore: number;
+    assinadosScore: number;
+    /** true = comparou com a meta pessoal real; false = sem meta cadastrada, comparou com a
+     * média da equipe em vez disso (ver calcularScoreInteligente). */
+    assinadosUsouMeta: boolean;
+    mediaDiaScore: number;
+  };
 }
 
 export const BANDA_LABEL: Record<NivelStatus, string> = {
@@ -47,11 +62,24 @@ export const BANDA_LABEL: Record<NivelStatus, string> = {
  * Cada componente é normalizado 0-100 antes de aplicar o peso — nenhum deles usa uma meta
  * inventada: Assinados usa a meta real do banco, os outros três usam a média real da equipe
  * que está sendo exibida no momento (mesmo grupo, mesmo período).
+ *
+ * Quem não tem meta mensal cadastrada (metaMensal = 0, mostrado como "sem meta" no card) NÃO
+ * pode ter o componente Assinados contado como 0% — isso penalizava silenciosamente quem nem
+ * deveria estar sendo medido contra uma meta que não existe. Nesse caso, compara com a média
+ * de assinados da equipe em vez da meta pessoal (mesmo padrão já usado em Protocolados e
+ * Média/Dia, que também caem pra média da equipe).
  */
 export function calcularScoreInteligente(c: ColaboradorReal, media: MediaEquipe, diasUteisPeriodo: number): ScoreResultado {
   const conversaoScore = Math.min(100, c.conversaoAssinadosProtocolados);
   const protocoladosScore = media.protocolados > 0 ? Math.min(100, (c.protocolados / media.protocolados) * 100) : c.protocolados > 0 ? 100 : 0;
-  const assinadosScore = Math.min(100, c.atingimentoMetaMensal);
+  const assinadosUsouMeta = c.metaMensal > 0;
+  const assinadosScore = assinadosUsouMeta
+    ? Math.min(100, c.atingimentoMetaMensal)
+    : media.assinados > 0
+      ? Math.min(100, (c.assinados / media.assinados) * 100)
+      : c.assinados > 0
+        ? 100
+        : 0;
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
   const mediaDiaScore = media.mediaDia > 0 ? Math.min(100, (mediaDia / media.mediaDia) * 100) : mediaDia > 0 ? 100 : 0;
 
@@ -59,7 +87,11 @@ export function calcularScoreInteligente(c: ColaboradorReal, media: MediaEquipe,
   const arredondado = Math.round(score);
 
   const banda: NivelStatus = arredondado >= 90 ? 'excelente' : arredondado >= 70 ? 'bom' : arredondado >= 50 ? 'atencao' : arredondado >= 30 ? 'alerta' : 'critico';
-  return { score: arredondado, banda };
+  return {
+    score: arredondado,
+    banda,
+    detalhe: { conversaoScore, protocoladosScore, assinadosScore, assinadosUsouMeta, mediaDiaScore },
+  };
 }
 
 /** Tendência real dos últimos dias com dado (comparando a 2ª metade da série com a 1ª) —

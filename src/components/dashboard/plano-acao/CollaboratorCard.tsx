@@ -33,7 +33,16 @@ export function CollaboratorCard({
   indice,
 }: CollaboratorCardProps) {
   const [aberto, setAberto] = useState(false);
-  const { score, banda } = calcularScoreInteligente(c, media, diasUteisPeriodo);
+  const { score, banda, detalhe } = calcularScoreInteligente(c, media, diasUteisPeriodo);
+  // Tooltip auditável: mostra exatamente as 4 sub-notas (0-100) e os pesos que formam o score
+  // dessa pessoa especificamente — pra responder "como esse score funciona" com o número real
+  // dela, não uma explicação genérica da fórmula.
+  const tituloScore =
+    `Score ${score} = Conversão ${Math.round(detalhe.conversaoScore)} × 40% + Protocolados ${Math.round(detalhe.protocoladosScore)} × 25% + ` +
+    `Assinados ${Math.round(detalhe.assinadosScore)} × 20% + Média/Dia ${Math.round(detalhe.mediaDiaScore)} × 15%. ` +
+    (detalhe.assinadosUsouMeta
+      ? 'Assinados comparado com a meta mensal real.'
+      : 'Sem meta cadastrada — Assinados comparado com a média da equipe em vez de 0%.');
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
   const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda, score, serieUltimosDias);
   const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
@@ -76,7 +85,7 @@ export function CollaboratorCard({
           <p className="text-sm font-semibold text-slate-900 truncate">{c.nome}</p>
           <p className="text-[12px] text-slate-500 truncate">{c.time} · {formatCargo(c.cargo)}</p>
         </div>
-        <div title="Score Inteligente: pondera Conversão (40%), Protocolados (25%), Assinados (20%) e Média/Dia (15%) frente à equipe.">
+        <div title={tituloScore}>
           <ScoreCircle score={score} banda={banda} size={40} />
         </div>
       </div>
