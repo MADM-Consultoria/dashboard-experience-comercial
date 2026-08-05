@@ -17,7 +17,11 @@ interface ResumoMesCardProps {
 
 /** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + projeção, no estilo do resumo-mês. */
 export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, onClick }: ResumoMesCardProps) {
-  const progresso = meta > 0 ? (atual / meta) * 100 : 0;
+  // Sem meta cadastrada (meta = 0): "0%" de progresso, "gap vs meta 0" e um ritmo "positivo" só
+  // porque não há nada pra comparar são todos números tecnicamente calculados mas sem
+  // significado nenhum — melhor avisar claramente do que fingir uma meta que não existe.
+  const temMeta = meta > 0;
+  const progresso = temMeta ? (atual / meta) * 100 : 0;
   const ritmoVsEsperado = pace.paceEsperado > 0 ? ((pace.paceAtual - pace.paceEsperado) / pace.paceEsperado) * 100 : 0;
   const ritmoPositivo = ritmoVsEsperado >= 0;
 
@@ -46,45 +50,61 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
 
       <div className="flex items-baseline gap-1.5">
         <span className="text-3xl font-bold text-slate-900">{formatNumero(atual)}</span>
-        <span className="text-sm text-slate-400">/ {formatNumero(meta)}</span>
+        <span className="text-sm text-slate-400">{temMeta ? `/ ${formatNumero(meta)}` : ''}</span>
       </div>
 
-      <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(100, progresso)}%` }} />
-      </div>
-      <div className="flex justify-end mt-1 mb-4">
-        <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
-      </div>
+      {temMeta ? (
+        <>
+          <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.min(100, progresso)}%` }} />
+          </div>
+          <div className="flex justify-end mt-1 mb-4">
+            <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
+          </div>
 
-      <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100">
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace esperado</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Ritmo vs esperado</p>
-          <span
-            className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${
-              ritmoPositivo ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'
-            }`}
-          >
-            {ritmoPositivo ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
-            {Math.abs(ritmoVsEsperado).toFixed(1)}%
-          </span>
-        </div>
-      </div>
+          <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100">
+            <div>
+              <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
+              <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 mb-0.5">Pace esperado</p>
+              <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-slate-500 mb-0.5">Ritmo vs esperado</p>
+              <span
+                className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${
+                  ritmoPositivo ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'
+                }`}
+              >
+                {ritmoPositivo ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
+                {Math.abs(ritmoVsEsperado).toFixed(1)}%
+              </span>
+            </div>
+          </div>
 
-      <p className="mt-3 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
-        Projeção ao fim do mês: <span className="font-semibold text-slate-700">{formatNumero(pace.projecao)}</span> · gap de{' '}
-        <span className="font-semibold" style={{ color: STATUS_COLOR[statusPace] }}>
-          {pace.gap >= 0 ? '+' : ''}{formatNumero(pace.gap)}
-        </span>{' '}
-        vs meta
-      </p>
+          <p className="mt-3 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
+            Projeção ao fim do mês: <span className="font-semibold text-slate-700">{formatNumero(pace.projecao)}</span> · gap de{' '}
+            <span className="font-semibold" style={{ color: STATUS_COLOR[statusPace] }}>
+              {pace.gap >= 0 ? '+' : ''}{formatNumero(pace.gap)}
+            </span>{' '}
+            vs meta
+          </p>
+        </>
+      ) : (
+        <>
+          {/* Sem meta pra comparar, mas o pace atual (assinados ÷ dias úteis decorridos) ainda
+             é um número real e útil — só o que depende de uma meta some. */}
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
+            <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
+          </div>
+          <p className="mt-3 pt-3 border-t border-slate-100 text-[12px] text-slate-500">
+            Meta ainda não configurada pra este recorte no período — sem meta real pra comparar, não dá pra calcular pace esperado nem projeção.
+          </p>
+        </>
+      )}
     </Card>
   );
 }
