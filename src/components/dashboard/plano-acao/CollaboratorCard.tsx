@@ -110,7 +110,13 @@ export function CollaboratorCard({
               titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador."
               value={formatNumero(c.recebidos)}
             />
-            <MetricRow icon={Gauge} cor="#22C55E" label="Média/Dia" titulo="Assinados por dia útil no período." value={`${mediaDia.toFixed(1)} assinados/dia`} />
+            <MetricRow
+              icon={Gauge}
+              cor="#22C55E"
+              label="Média/Dia"
+              titulo={`Cálculo real: ${formatNumero(c.assinados)} assinado(s) no período selecionado ÷ ${diasUteisPeriodo} dia(s) útil(eis) do período = ${mediaDia.toFixed(2)} assinados/dia útil.`}
+              value={`${mediaDia.toFixed(1)} assinados/dia`}
+            />
             <MetricRow icon={FileSignature} cor="#22C55E" label="Assinados">
               <QuadradosRitmo
                 label="Assinados"
