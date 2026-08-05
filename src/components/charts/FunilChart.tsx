@@ -136,14 +136,21 @@ export function FunilChart({ etapas, conversaoGeral, conversaoJudit, conversaoPr
             style={{ top: espacamento, height: espacamento * (taxas.length - 1) }}
           />
           {taxas.map((t, i) => (
-            <span
+            <div
               key={t.label}
-              title={t.label}
-              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold whitespace-nowrap"
-              style={{ top: espacamento * (i + 1), fontSize: 12, borderRadius: 16, padding: '4px 10px', color: t.cor, backgroundColor: `${t.cor}26` }}
+              className="group absolute left-1/2 -translate-x-1/2 -translate-y-1/2"
+              style={{ top: espacamento * (i + 1) }}
             >
-              {formatPct(t.valor, 1)}
-            </span>
+              <span
+                className="block font-semibold whitespace-nowrap cursor-default"
+                style={{ fontSize: 12, borderRadius: 16, padding: '4px 10px', color: t.cor, backgroundColor: `${t.cor}26` }}
+              >
+                {formatPct(t.valor, 1)}
+              </span>
+              <span className="pointer-events-none absolute left-1/2 bottom-full mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-800 dark:bg-slate-700 px-2.5 py-1.5 text-[12px] font-medium text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
+                {t.label}
+              </span>
+            </div>
           ))}
         </div>
       </div>
