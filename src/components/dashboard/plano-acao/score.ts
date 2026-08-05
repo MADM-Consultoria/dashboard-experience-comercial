@@ -119,9 +119,23 @@ export function gerarRecomendacoesIA(
     const meio = Math.floor(serie.length / 2);
     const antes = serie.slice(0, meio).reduce((a, b) => a + b, 0);
     const depois = serie.slice(meio).reduce((a, b) => a + b, 0);
-    recomendacoes.push(
-      `Caiu de ${antes} para ${depois} assinados entre a 1ª e a 2ª metade do mês. Fazer um acompanhamento individual essa semana pra entender o motivo antes que vire uma tendência maior.`,
-    );
+    const quedaPct = antes > 0 ? Math.round(((antes - depois) / antes) * 100) : 100;
+    const zerou = depois === 0 && antes > 0;
+    const bandaBoa = banda === 'excelente' || banda === 'bom';
+
+    let mensagem: string;
+    if (zerou && bandaBoa) {
+      // Score ainda bom mas zerou de vez — provavelmente pausa pontual (férias, licença,
+      // trocou de carteira), não desempenho ruim. Tom de checagem, não de cobrança.
+      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas o score (${score}) ainda está em ${BANDA_LABEL[banda].split(' · ')[1].toLowerCase()}. Vale só confirmar se é pausa pontual (férias, mudança de carteira) antes de virar uma queda de verdade.`;
+    } else if (zerou) {
+      mensagem = `Zerou os assinados na 2ª metade do mês depois de ${antes} na 1ª, e o score (${score}) já reflete isso. Conversa individual essa semana pra entender a causa antes que o mês feche assim.`;
+    } else if (quedaPct >= 50) {
+      mensagem = `Caiu ${quedaPct}% nos assinados — de ${antes} na 1ª metade do mês pra ${depois} na 2ª. Queda grande o bastante pra tratar como prioridade, não só acompanhar.`;
+    } else {
+      mensagem = `Ritmo caiu ${quedaPct}% ao longo do mês (${antes} → ${depois} assinados, 1ª pra 2ª metade). Ainda dá pra reverter com um ajuste simples — vale uma conversa rápida pra identificar o que mudou.`;
+    }
+    recomendacoes.push(mensagem);
   }
 
   if (c.metaMensal > 0 && c.atingimentoMetaMensal < 50) {
