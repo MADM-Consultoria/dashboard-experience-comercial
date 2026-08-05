@@ -1,5 +1,4 @@
 import type { LucideIcon } from 'lucide-react';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import type { NivelStatus, PaceProjecao } from '@/types/domain';
 import { formatNumero, STATUS_COLOR } from '@/lib/format';
@@ -18,8 +17,6 @@ interface ResumoMesCardProps {
 /** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + projeção, no estilo do resumo-mês. */
 export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
-  const ritmoVsEsperado = pace.paceEsperado > 0 ? ((pace.paceAtual - pace.paceEsperado) / pace.paceEsperado) * 100 : 0;
-  const ritmoPositivo = ritmoVsEsperado >= 0;
 
   return (
     <Card
@@ -56,7 +53,7 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
         <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-100">
+      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
         <div>
           <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
           <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
@@ -64,17 +61,6 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
         <div>
           <p className="text-[11px] text-slate-500 mb-0.5">Pace esperado</p>
           <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Ritmo vs esperado</p>
-          <span
-            className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[11px] font-medium ${
-              ritmoPositivo ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'
-            }`}
-          >
-            {ritmoPositivo ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
-            {Math.abs(ritmoVsEsperado).toFixed(1)}%
-          </span>
         </div>
       </div>
 
