@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useAutoRefresh } from '@/context/AutoRefreshContext';
+import { useAutoRefreshTick } from '@/context/AutoRefreshContext';
 import { calcularKpiEquipe, pct } from '@/lib/metrics';
 import { calcularRanking } from '@/lib/ranking';
 import { gerarAlertas } from '@/lib/alerts';
@@ -57,7 +57,7 @@ export function getPeriodoMesAtualReal() {
 export function useIntelligence(periodoFixo?: { inicio: string; fim: string; label: string }) {
   const { colaboradores: colaboradoresBase, loading: loadingRelatorio, error: errorRelatorio } = useRelatorio();
   const { sessao } = useAuth();
-  const { tick } = useAutoRefresh();
+  const tick = useAutoRefreshTick();
   const periodoSelecionadoCalendario = useDataSelecionada();
   const { inicio, fim, label: labelPeriodo } = periodoFixo ?? periodoSelecionadoCalendario;
   const carregouPeriodoAlgumaVez = useRef(false);

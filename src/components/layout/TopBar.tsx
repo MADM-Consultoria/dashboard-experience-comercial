@@ -4,7 +4,7 @@ import { CalendarioSelector } from './CalendarioSelector';
 import { MobileNav } from './MobileNav';
 import { UserMenu } from './UserMenu';
 import { useIntelligence } from '@/lib/useIntelligence';
-import { useAutoRefresh } from '@/context/AutoRefreshContext';
+import { useAutoRefreshCountdown } from '@/context/AutoRefreshContext';
 
 function formatarContagem(segundos: number): string {
   const m = Math.floor(segundos / 60);
@@ -16,7 +16,7 @@ function formatarContagem(segundos: number): string {
  * força mais um reload da página; em vez disso mostra quanto falta pra próxima atualização
  * automática, pra deixar claro que não precisa apertar nada. */
 function BotaoAtualizar() {
-  const { segundosRestantes } = useAutoRefresh();
+  const segundosRestantes = useAutoRefreshCountdown();
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

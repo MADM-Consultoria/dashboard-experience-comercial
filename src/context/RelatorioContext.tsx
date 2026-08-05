@@ -3,7 +3,7 @@ import { criarColaboradorSintetico, fetchRelatorioJudit, mapRowParaColaborador, 
 import { listarAtivos } from '@/lib/colaboradoresAtivos';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { useAuth } from '@/context/AuthContext';
-import { useAutoRefresh } from '@/context/AutoRefreshContext';
+import { useAutoRefreshTick } from '@/context/AutoRefreshContext';
 
 interface RelatorioContextValue {
   colaboradores: ColaboradorReal[];
@@ -23,7 +23,7 @@ const RelatorioContext = createContext<RelatorioContextValue | null>(null);
  */
 export function RelatorioProvider({ children }: { children: ReactNode }) {
   const { sessao } = useAuth();
-  const { tick } = useAutoRefresh();
+  const tick = useAutoRefreshTick();
   const [colaboradores, setColaboradores] = useState<ColaboradorReal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
