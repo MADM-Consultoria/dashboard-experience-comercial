@@ -5,9 +5,10 @@ import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
 
 /**
  * Expõe a contagem de protocolados por dia e por consultor (lead_usuario_responsavel), a
- * partir de `madm.view_app_kommo_leads` — mesma fonte/coluna de protocolados-periodo.ts, só
- * que agrupado por dia também (data_protocolo_juridico_auditoria), pro ritmo diário do Plano
- * de Ação. Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * partir de `madm.view_app_kommo_leads` — mesma definição de protocolados-periodo.ts (data de
+ * ganho, funil "JURIDICO AUDITORIA DE GANHO", etapa "PROTOCOLADO"), só que agrupado por dia
+ * também, pro ritmo diário do Plano de Ação. Somente leitura — nenhum outro comando SQL além
+ * do SELECT abaixo.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -27,9 +28,11 @@ export const handler: Handler = async (event) => {
 
   try {
     const resultado = await getPool().query(
-      `select data_protocolo_juridico_auditoria::date as dia, lead_usuario_responsavel as consultor, count(*)::int as total
+      `select data_ganho::date as dia, lead_usuario_responsavel as consultor, count(*)::int as total
          from madm.view_app_kommo_leads
-        where data_protocolo_juridico_auditoria between $1 and $2
+        where data_ganho between $1 and $2
+          and funil_vendas = 'JURIDICO AUDITORIA DE GANHO'
+          and etapa_lead = 'PROTOCOLADO'
         group by 1, 2
         order by 1`,
       [inicio, fim],

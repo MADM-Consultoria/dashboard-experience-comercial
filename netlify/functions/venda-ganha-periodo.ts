@@ -6,9 +6,29 @@ import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
 /**
  * Expõe a contagem de venda ganha por consultor em um período, a partir de
  * `madm.view_app_kommo_leads` — venda ganha é contada pela data de ganho
- * (`data_ganho`), uma linha por lead. Somente leitura — nenhum outro comando
- * SQL além do SELECT abaixo.
+ * (`data_ganho`), restrita aos funis de auditoria de ganho/PRO e às etapas do
+ * funil que a operação considera parte do fluxo de venda ganha (definição
+ * passada pela operação via SELECT em madm.kommo_leads). Uma linha por lead.
+ * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
  */
+const FUNIS_VENDA_GANHA = ['JURIDICO AUDITORIA DE GANHO', 'AUDITORIA DE GANHO', 'PRO'];
+const ETAPAS_VENDA_GANHA = [
+  'AG PROTOCOLO',
+  'PROTOCOLADO',
+  'Venda ganha',
+  'AG PRONTUÁRIO',
+  'ENTRADA',
+  'Coleta dados Hospital',
+  'E-MAIL NÃO RESPONDIDO',
+  'E-MAIL RESPONDIDO',
+  'AÇÃO DO CLIENTE',
+  'ASSINATURA DO ADV',
+  'PENDÊNCIA PRO',
+  'VALIDAÇÃO SUPERVISOR',
+  'FINALIZADO',
+  'ANALISE DE PRONTUÁRIO',
+];
+
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
@@ -30,8 +50,10 @@ export const handler: Handler = async (event) => {
       `select lead_usuario_responsavel as consultor, count(*)::int as total
          from madm.view_app_kommo_leads
         where data_ganho between $1 and $2
+          and funil_vendas = any($3)
+          and etapa_lead = any($4)
         group by 1`,
-      [inicio, fim],
+      [inicio, fim, FUNIS_VENDA_GANHA, ETAPAS_VENDA_GANHA],
     );
     const dados = filtrarPorTimeConsultor(resultado.rows, sessao.time);
     return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
