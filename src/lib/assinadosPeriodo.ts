@@ -96,7 +96,7 @@ async function fetchContagemPeriodo(endpoint: string, token: string, inicio: str
   if (emCache) return emCache;
 
   const params = new URLSearchParams({ inicio, fim });
-  const { resposta, dados } = await fetchComRetry(`/.netlify/functions/${endpoint}?${params.toString()}`, token);
+  const { resposta, dados } = await fetchComRetry(`/api/${endpoint}?${params.toString()}`, token);
   if (!resposta.ok || !dados.ok) {
     throw new Error(dados.error ?? 'Não foi possível carregar os dados do período.');
   }
@@ -145,7 +145,7 @@ async function fetchContagemJuditPeriodo(endpoint: string, token: string, inicio
   if (emCache) return emCache;
 
   const params = new URLSearchParams({ inicio, fim });
-  const { resposta, dados } = await fetchComRetry(`/.netlify/functions/${endpoint}?${params.toString()}`, token);
+  const { resposta, dados } = await fetchComRetry(`/api/${endpoint}?${params.toString()}`, token);
   if (!resposta.ok || !dados.ok) {
     throw new Error(dados.error ?? 'Não foi possível carregar os dados do período.');
   }

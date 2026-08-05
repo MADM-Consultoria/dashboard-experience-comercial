@@ -1,11 +1,10 @@
 import type { Handler } from '@netlify/functions';
-import { connectLambda } from '@netlify/blobs';
-import { assinarToken, getUsuarios } from './_shared/auth';
-import { registrarEvento } from './_shared/logs';
-import { buscarUsuarioRegistrado, criarUsuarioRegistrado, ehLoginMaster, hashSenha, validarEmailCorporativo } from './_shared/users';
-import { extrairIp, textoSeguro, ValidacaoError } from './_shared/validacao';
-import { registrarTentativa, verificarLimite } from './_shared/rateLimit';
-import { buscarTimeRestrito } from './_shared/supervisoresTime';
+import { assinarToken, getUsuarios } from './_shared/auth.js';
+import { registrarEvento } from './_shared/logs.js';
+import { buscarUsuarioRegistrado, criarUsuarioRegistrado, ehLoginMaster, hashSenha, validarEmailCorporativo } from './_shared/users.js';
+import { extrairIp, textoSeguro, ValidacaoError } from './_shared/validacao.js';
+import { registrarTentativa, verificarLimite } from './_shared/rateLimit.js';
+import { buscarTimeRestrito } from './_shared/supervisoresTime.js';
 
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 const LIMITE_CADASTROS = 5;
@@ -19,10 +18,6 @@ const JANELA_LIMITE_MS = 60 * 60 * 1000; // 1 hora
  * guardada com hash (scrypt + salt), nunca em texto puro.
  */
 export const handler: Handler = async (event) => {
-  // O tipo de HandlerEvent (@netlify/functions) e o esperado por connectLambda
-  // (@netlify/blobs) divergem entre as versões atuais dos dois pacotes — o cast é
-  // só pra bater a assinatura de tipos, o objeto em runtime já tem o que o Blobs precisa.
-  connectLambda(event as unknown as Parameters<typeof connectLambda>[0]);
   try {
     if (event.httpMethod !== 'POST') {
       return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
@@ -32,7 +27,7 @@ export const handler: Handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'AUTH_SECRET não configurado.' }) };
     }
 
-    const ip = extrairIp(event.headers['x-nf-client-connection-ip'] ?? event.headers['client-ip']) ?? 'desconhecido';
+    const ip = extrairIp(event.headers['x-forwarded-for'] ?? event.headers['x-real-ip']) ?? 'desconhecido';
     const chaveLimite = `register-ip:${ip}`;
 
     const limite = await verificarLimite(chaveLimite, LIMITE_CADASTROS, JANELA_LIMITE_MS);

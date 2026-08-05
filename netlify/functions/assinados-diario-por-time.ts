@@ -1,6 +1,6 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db';
-import { extrairToken, validarToken } from './_shared/auth';
+import { getPool } from './_shared/db.js';
+import { extrairToken, validarToken } from './_shared/auth.js';
 
 /**
  * Expõe a contagem de assinados por dia e por time (equipe_responsavel_assinatura),

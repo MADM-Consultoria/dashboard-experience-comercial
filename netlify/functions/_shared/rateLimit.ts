@@ -1,7 +1,7 @@
-import { getStore } from '@netlify/blobs';
+import { kv } from '@vercel/kv';
 
 /**
- * Limitador de tentativas simples (por IP), guardado em Netlify Blobs.
+ * Limitador de tentativas simples (por IP), guardado no Vercel KV (Redis).
  * Protege login e cadastro contra força bruta e criação em massa de contas
  * — o principal risco real de um site sem banco de dados ainda conectado
  * (não há SQL para injetar, mas há um formulário de senha exposto ao mundo).
@@ -11,8 +11,8 @@ interface RegistroLimite {
   iniciadoEm: number;
 }
 
-function getRateLimitStore() {
-  return getStore('rate-limit');
+function chaveKv(chave: string): string {
+  return `rate-limit:${chave}`;
 }
 
 export interface ResultadoLimite {
@@ -21,8 +21,7 @@ export interface ResultadoLimite {
 }
 
 export async function verificarLimite(chave: string, maxTentativas: number, janelaMs: number): Promise<ResultadoLimite> {
-  const store = getRateLimitStore();
-  const registro = (await store.get(chave, { type: 'json' })) as RegistroLimite | null;
+  const registro = await kv.get<RegistroLimite>(chaveKv(chave));
   const agora = Date.now();
 
   if (!registro || agora - registro.iniciadoEm > janelaMs) {
@@ -37,18 +36,17 @@ export async function verificarLimite(chave: string, maxTentativas: number, jane
 }
 
 export async function registrarTentativa(chave: string, janelaMs: number): Promise<void> {
-  const store = getRateLimitStore();
-  const registro = (await store.get(chave, { type: 'json' })) as RegistroLimite | null;
+  const registro = await kv.get<RegistroLimite>(chaveKv(chave));
   const agora = Date.now();
+  const expiracaoSegundos = Math.ceil(janelaMs / 1000);
 
   if (!registro || agora - registro.iniciadoEm > janelaMs) {
-    await store.setJSON(chave, { tentativas: 1, iniciadoEm: agora });
+    await kv.set(chaveKv(chave), { tentativas: 1, iniciadoEm: agora }, { ex: expiracaoSegundos });
   } else {
-    await store.setJSON(chave, { tentativas: registro.tentativas + 1, iniciadoEm: registro.iniciadoEm });
+    await kv.set(chaveKv(chave), { tentativas: registro.tentativas + 1, iniciadoEm: registro.iniciadoEm }, { ex: expiracaoSegundos });
   }
 }
 
 export async function limparTentativas(chave: string): Promise<void> {
-  const store = getRateLimitStore();
-  await store.delete(chave);
+  await kv.del(chaveKv(chave));
 }

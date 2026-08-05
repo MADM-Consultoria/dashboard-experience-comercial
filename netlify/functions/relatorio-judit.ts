@@ -1,6 +1,6 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db';
-import { extrairToken, validarToken } from './_shared/auth';
+import { getPool } from './_shared/db.js';
+import { extrairToken, validarToken } from './_shared/auth.js';
 
 /**
  * Expõe a view `madm.view_relatorio_judit` (métricas mensais agregadas por

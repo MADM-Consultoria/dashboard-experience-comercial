@@ -58,7 +58,7 @@ export default function Logs() {
     setCarregando(true);
     setErro(null);
     try {
-      const resposta = await fetch('/.netlify/functions/logs', {
+      const resposta = await fetch('/api/logs', {
         headers: { Authorization: `Bearer ${sessao?.token}` },
       });
       const dados = await resposta.json();

@@ -9,7 +9,7 @@ export function useTrackVisit() {
 
   useEffect(() => {
     if (!sessao) return;
-    fetch('/.netlify/functions/track-visit', {
+    fetch('/api/track-visit', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

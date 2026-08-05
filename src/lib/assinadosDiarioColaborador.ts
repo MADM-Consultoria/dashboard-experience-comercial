@@ -37,7 +37,7 @@ async function fetchComRetry(url: string, token: string, tentativas = 3): Promis
  * (data_assinatura), filtrado no cliente por nome normalizado (mesmo padrão do resto do app). */
 export async function fetchAssinadosDiarioColaborador(token: string, nomeColaborador: string, inicio: string, fim: string): Promise<AssinadosDiarioColaboradorLinha[]> {
   const params = new URLSearchParams({ inicio, fim });
-  const dados = await fetchComRetry(`/.netlify/functions/assinados-diario-colaborador?${params.toString()}`, token);
+  const dados = await fetchComRetry(`/api/assinados-diario-colaborador?${params.toString()}`, token);
 
   const chave = normalizarNome(nomeColaborador);
   return (dados.dados as LinhaBruta[])
@@ -53,7 +53,7 @@ export async function fetchAssinadosDiarioColaborador(token: string, nomeColabor
  * Plano de Ação). Uma chamada só ao banco em vez de uma por colaborador exibido. */
 export async function fetchAssinadosDiarioTodos(token: string, inicio: string, fim: string): Promise<Map<string, AssinadosDiarioColaboradorLinha[]>> {
   const params = new URLSearchParams({ inicio, fim });
-  const dados = await fetchComRetry(`/.netlify/functions/assinados-diario-colaborador?${params.toString()}`, token);
+  const dados = await fetchComRetry(`/api/assinados-diario-colaborador?${params.toString()}`, token);
 
   const porConsultor = new Map<string, AssinadosDiarioColaboradorLinha[]>();
   for (const l of dados.dados as LinhaBruta[]) {

@@ -1,7 +1,7 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db';
-import { extrairToken, validarToken } from './_shared/auth';
-import { filtrarPorTimeConsultor } from './_shared/timesEquipe';
+import { getPool } from './_shared/db.js';
+import { extrairToken, validarToken } from './_shared/auth.js';
+import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
 
 /**
  * Expõe a contagem de venda ganha por consultor em um período, a partir de

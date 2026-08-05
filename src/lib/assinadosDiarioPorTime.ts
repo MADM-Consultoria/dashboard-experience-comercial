@@ -35,7 +35,7 @@ async function fetchComRetry(url: string, token: string, tentativas = 3): Promis
 /** Assinados por dia e por time no intervalo — madm.view_app_emitidos_e_assinados (data_assinatura). */
 export async function fetchAssinadosDiarioPorTime(token: string, inicio: string, fim: string): Promise<AssinadosDiarioLinha[]> {
   const params = new URLSearchParams({ inicio, fim });
-  const dados = await fetchComRetry(`/.netlify/functions/assinados-diario-por-time?${params.toString()}`, token);
+  const dados = await fetchComRetry(`/api/assinados-diario-por-time?${params.toString()}`, token);
 
   return (dados.dados as LinhaBruta[])
     .filter((l) => l.equipe)

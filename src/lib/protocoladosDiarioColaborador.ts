@@ -38,7 +38,7 @@ async function fetchComRetry(url: string, token: string, tentativas = 3): Promis
  * Protocolados no Plano de Ação). Uma chamada só ao banco em vez de uma por colaborador exibido. */
 export async function fetchProtocoladosDiarioTodos(token: string, inicio: string, fim: string): Promise<Map<string, ProtocoladosDiarioColaboradorLinha[]>> {
   const params = new URLSearchParams({ inicio, fim });
-  const dados = await fetchComRetry(`/.netlify/functions/protocolados-diario-colaborador?${params.toString()}`, token);
+  const dados = await fetchComRetry(`/api/protocolados-diario-colaborador?${params.toString()}`, token);
 
   const porConsultor = new Map<string, ProtocoladosDiarioColaboradorLinha[]>();
   for (const l of dados.dados as LinhaBruta[]) {

@@ -108,7 +108,7 @@ export async function fetchRelatorioJudit(token: string): Promise<RelatorioJudit
   let ultimoErro: unknown;
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
     try {
-      const resposta = await fetch('/.netlify/functions/relatorio-judit', {
+      const resposta = await fetch('/api/relatorio-judit', {
         headers: { Authorization: `Bearer ${token}` },
       });
       const dados = await resposta.json();

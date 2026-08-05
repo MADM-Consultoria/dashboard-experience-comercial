@@ -1,15 +1,10 @@
 import type { Handler } from '@netlify/functions';
-import { connectLambda } from '@netlify/blobs';
-import { extrairToken, validarToken } from './_shared/auth';
-import { registrarEvento } from './_shared/logs';
-import { caminhoSeguro, extrairIp, ValidacaoError } from './_shared/validacao';
+import { extrairToken, validarToken } from './_shared/auth.js';
+import { registrarEvento } from './_shared/logs.js';
+import { caminhoSeguro, extrairIp, ValidacaoError } from './_shared/validacao.js';
 
 /** Registra qual página um colaborador logado visitou, para a governança de acesso. */
 export const handler: Handler = async (event) => {
-  // O tipo de HandlerEvent (@netlify/functions) e o esperado por connectLambda
-  // (@netlify/blobs) divergem entre as versões atuais dos dois pacotes — o cast é
-  // só pra bater a assinatura de tipos, o objeto em runtime já tem o que o Blobs precisa.
-  connectLambda(event as unknown as Parameters<typeof connectLambda>[0]);
   try {
     if (event.httpMethod !== 'POST') {
       return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
@@ -42,7 +37,7 @@ export const handler: Handler = async (event) => {
         usuario: sessao.usuario,
         tipo: 'pagina',
         caminho,
-        ip: extrairIp(event.headers['x-nf-client-connection-ip'] ?? event.headers['client-ip']),
+        ip: extrairIp(event.headers['x-forwarded-for'] ?? event.headers['x-real-ip']),
       });
     } catch (err) {
       // Rastreamento é best-effort: nunca deve derrubar a navegação do usuário por causa disso.

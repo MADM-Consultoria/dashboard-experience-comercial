@@ -31,3 +31,6 @@ dist-ssr
 
 # Claude Code local state (not part of the app)
 .claude
+
+.vercel
+.env*

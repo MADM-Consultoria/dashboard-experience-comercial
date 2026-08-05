@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import { getStore } from '@netlify/blobs';
+import { kv } from '@vercel/kv';
 
 export interface UsuarioRegistrado {
   usuario: string; // login: primeiro.sobrenome@madmbrasil.com.br
@@ -11,10 +11,6 @@ export interface UsuarioRegistrado {
 
 const CHAVE = 'usuarios';
 const DOMINIO = '@madmbrasil.com.br';
-
-function getUsersStore() {
-  return getStore('dashboard-registered-users');
-}
 
 function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
@@ -68,8 +64,7 @@ export function verificarSenha(senha: string, senhaHash: string): boolean {
 }
 
 export async function listarUsuariosRegistrados(): Promise<UsuarioRegistrado[]> {
-  const store = getUsersStore();
-  const atuais = (await store.get(CHAVE, { type: 'json' })) as UsuarioRegistrado[] | null;
+  const atuais = await kv.get<UsuarioRegistrado[]>(CHAVE);
   return atuais ?? [];
 }
 
@@ -79,8 +74,7 @@ export async function buscarUsuarioRegistrado(usuario: string): Promise<UsuarioR
 }
 
 export async function criarUsuarioRegistrado(dados: Omit<UsuarioRegistrado, 'criadoEm'>): Promise<void> {
-  const store = getUsersStore();
   const lista = await listarUsuariosRegistrados();
   lista.push({ ...dados, criadoEm: new Date().toISOString() });
-  await store.setJSON(CHAVE, lista);
+  await kv.set(CHAVE, lista);
 }
