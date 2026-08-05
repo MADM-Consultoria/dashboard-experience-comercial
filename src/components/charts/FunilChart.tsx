@@ -126,23 +126,24 @@ export function FunilChart({ etapas, conversaoGeral, conversaoJudit, conversaoPr
           })}
         </div>
 
-        {/* 3 taxas de conversão gerais do período — não são mais por etapa do funil */}
+        {/* 3 taxas de conversão gerais do período — não são mais por etapa do funil. Nome só
+           aparece no tooltip ao passar o cursor; visualmente é uma linha do tempo (pílulas
+           ligadas por um traço pontilhado), igual ao que já existia antes por etapa. */}
         <div className="relative shrink-0" style={{ width: 90, height: alturaTotal }}>
           <p className="absolute text-center w-full text-slate-500" style={{ top: -20, fontSize: 11 }}>Taxa de conversão</p>
+          <div
+            className="absolute left-1/2 border-l border-dashed border-slate-300 dark:border-slate-600"
+            style={{ top: espacamento, height: espacamento * (taxas.length - 1) }}
+          />
           {taxas.map((t, i) => (
-            <div
+            <span
               key={t.label}
-              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
-              style={{ top: espacamento * (i + 1) }}
+              title={t.label}
+              className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 font-semibold whitespace-nowrap"
+              style={{ top: espacamento * (i + 1), fontSize: 12, borderRadius: 16, padding: '4px 10px', color: t.cor, backgroundColor: `${t.cor}26` }}
             >
-              <span className="text-center leading-tight text-slate-500" style={{ fontSize: 10 }}>{t.label}</span>
-              <span
-                className="font-semibold whitespace-nowrap"
-                style={{ fontSize: 12, borderRadius: 16, padding: '4px 10px', color: t.cor, backgroundColor: `${t.cor}26` }}
-              >
-                {formatPct(t.valor, 1)}
-              </span>
-            </div>
+              {formatPct(t.valor, 1)}
+            </span>
           ))}
         </div>
       </div>
