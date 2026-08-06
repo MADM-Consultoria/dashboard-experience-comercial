@@ -9,7 +9,7 @@ import { QuickActions } from './QuickActions';
 import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, type MediaEquipe } from './score';
 import { formatCargo, formatNumero } from '@/lib/format';
 import { getMesAnterior, listarDiasEntre } from '@/lib/period';
-import { fetchProtocoladosDiarioColaborador } from '@/lib/protocoladosDiarioColaborador';
+import { fetchAssinadosDiarioColaborador } from '@/lib/assinadosDiarioColaborador';
 import { useAuth } from '@/context/AuthContext';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 
@@ -66,11 +66,11 @@ export function CollaboratorCard({
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
 
-  // Comparativo Protocolados: mês atual x mês passado, buscado só quando a pessoa clica (não
-  // faz sentido puxar isso pra todo mundo de cara — a maioria nunca vai abrir). `diasSerie` já
-  // é o mês inteiro do período selecionado (dia 1 ao último dia), então o mês/ano de referência
-  // vem do primeiro dia dela. Alinha pelo número do dia (1, 2, 3...), não pela data literal,
-  // mesmo padrão do gráfico de evolução do colaborador.
+  // Comparativo Assinados: mês atual x mês passado, buscado só quando a pessoa clica (não faz
+  // sentido puxar isso pra todo mundo de cara — a maioria nunca vai abrir). `diasSerie` já é o
+  // mês inteiro do período selecionado (dia 1 ao último dia), então o mês/ano de referência vem
+  // do primeiro dia dela. Alinha pelo número do dia (1, 2, 3...), não pela data literal, mesmo
+  // padrão do gráfico de evolução do colaborador.
   async function alternarComparativo() {
     if (comparativoAberto) {
       setComparativoAberto(false);
@@ -83,12 +83,12 @@ export function CollaboratorCard({
       const [ano, mes] = diasSerie[0].split('-').map(Number);
       const mesAnterior = getMesAnterior(ano, mes);
       const diasAnterior = listarDiasEntre(mesAnterior.inicio, mesAnterior.fim);
-      const linhasAnterior = await fetchProtocoladosDiarioColaborador(sessao.token, c.nome, mesAnterior.inicio, mesAnterior.fim);
+      const linhasAnterior = await fetchAssinadosDiarioColaborador(sessao.token, c.nome, mesAnterior.inicio, mesAnterior.fim);
       const porDiaAnterior = new Map(linhasAnterior.map((l) => [l.dia, l.total]));
       const totalDias = Math.max(diasSerie.length, diasAnterior.length);
       const combinado: PontoComparativo[] = Array.from({ length: totalDias }, (_, indice) => ({
         dia: indice + 1,
-        atual: diasSerie[indice] ? serieProtocoladosUltimosDias[indice] ?? 0 : 0,
+        atual: diasSerie[indice] ? serieUltimosDias[indice] ?? 0 : 0,
         anterior: diasAnterior[indice] ? porDiaAnterior.get(diasAnterior[indice]) ?? 0 : 0,
       }));
       setComparativoDados(combinado);
@@ -137,37 +137,32 @@ export function CollaboratorCard({
 
           {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
               <p className="text-[10px] text-slate-500">Assinados por dia no mês</p>
-              <span
-                className="text-[10px] font-medium flex items-center gap-0.5 shrink-0 ml-2"
-                style={{ color: corTendencia }}
-                title="Compara a 1ª metade com a 2ª metade dos assinados dos últimos 7 dias com dado."
-              >
-                <IconeTendencia size={10} /> {tendencia === 'subindo' ? 'Em alta' : tendencia === 'caindo' ? 'Em queda' : 'Estável'}
-              </span>
-            </div>
-            <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] text-slate-500">Protocolados por dia no mês</p>
-              <button
-                type="button"
-                onClick={alternarComparativo}
-                className="group flex items-center gap-0.5 text-[10px] font-medium text-blue-600 hover:text-blue-700 shrink-0 ml-2"
-              >
-                <span className="underline decoration-blue-300 decoration-dotted underline-offset-2 transition-all duration-150 group-hover:decoration-blue-600 group-hover:decoration-solid">
-                  {comparativoAberto ? 'Ver só este mês' : 'Fazer comparativo com o mês passado'}
-                </span>
-                <ChevronRight size={11} className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
-              </button>
+              <div className="flex items-center gap-2">
+                {!comparativoAberto && (
+                  <span
+                    className="text-[10px] font-medium flex items-center gap-0.5 shrink-0"
+                    style={{ color: corTendencia }}
+                    title="Compara a 1ª metade com a 2ª metade dos assinados dos últimos 7 dias com dado."
+                  >
+                    <IconeTendencia size={10} /> {tendencia === 'subindo' ? 'Em alta' : tendencia === 'caindo' ? 'Em queda' : 'Estável'}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={alternarComparativo}
+                  className="group flex items-center gap-0.5 text-[10px] font-medium text-blue-600 hover:text-blue-700 shrink-0"
+                >
+                  <span className="underline decoration-blue-300 decoration-dotted underline-offset-2 transition-all duration-150 group-hover:decoration-blue-600 group-hover:decoration-solid">
+                    {comparativoAberto ? 'Ver só este mês' : 'Fazer comparativo com o mês passado'}
+                  </span>
+                  <ChevronRight size={11} className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
 
-            {!comparativoAberto && (
-              <Sparkline serie={serieProtocoladosUltimosDias} dias={diasSerie} tendencia="estavel" corFixa="#3B82F6" unidade="protocolado" />
-            )}
+            {!comparativoAberto && <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />}
 
             {comparativoAberto && comparativoCarregando && (
               <div className="h-[140px] flex items-center justify-center text-[11px] text-slate-400">Carregando comparativo...</div>
@@ -190,7 +185,7 @@ export function CollaboratorCard({
                       wrapperStyle={{ fontSize: 10 }}
                     />
                     <Line type="monotone" dataKey="anterior" name="anterior" stroke="#f97316" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="atual" name="atual" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="atual" name="atual" stroke="#2563eb" strokeWidth={2} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -199,6 +194,11 @@ export function CollaboratorCard({
             {comparativoAberto && !comparativoCarregando && comparativoDados?.length === 0 && (
               <p className="text-[11px] text-slate-400 py-4 text-center">Não foi possível carregar o mês passado agora.</p>
             )}
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[10px] text-slate-500 mb-1">Protocolados por dia no mês</p>
+            <Sparkline serie={serieProtocoladosUltimosDias} dias={diasSerie} tendencia="estavel" corFixa="#3B82F6" unidade="protocolado" />
           </div>
         </div>
       )}
