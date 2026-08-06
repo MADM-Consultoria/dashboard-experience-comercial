@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { ArrowDown, ArrowUp, Minus, Sparkles } from 'lucide-react';
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
 import { Sparkline } from './Sparkline';
 import { QuickActions } from './QuickActions';
 import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, type MediaEquipe } from './score';
-import { formatCargo } from '@/lib/format';
+import { formatCargo, formatNumero } from '@/lib/format';
+import { getMesAnterior, listarDiasEntre } from '@/lib/period';
+import { fetchProtocoladosDiarioColaborador } from '@/lib/protocoladosDiarioColaborador';
+import { useAuth } from '@/context/AuthContext';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 
 interface CollaboratorCardProps {
@@ -17,6 +21,12 @@ interface CollaboratorCardProps {
   serieProtocoladosUltimosDias: number[];
   diasSerie: string[];
   indice: number;
+}
+
+interface PontoComparativo {
+  dia: number;
+  atual: number;
+  anterior: number;
 }
 
 /**
@@ -34,7 +44,12 @@ export function CollaboratorCard({
   diasSerie,
   indice,
 }: CollaboratorCardProps) {
+  const { sessao } = useAuth();
   const [aberto, setAberto] = useState(false);
+  const [comparativoAberto, setComparativoAberto] = useState(false);
+  const [comparativoCarregando, setComparativoCarregando] = useState(false);
+  const [comparativoDados, setComparativoDados] = useState<PontoComparativo[] | null>(null);
+  const [labelMesAnterior, setLabelMesAnterior] = useState('');
   const { score, banda, detalhe } = calcularScoreInteligente(c, media, diasUteisPeriodo);
   // Tooltip auditável: mostra exatamente as 4 sub-notas (0-100) e os pesos que formam o score
   // dessa pessoa especificamente — pra responder "como esse score funciona" com o número real
@@ -50,6 +65,40 @@ export function CollaboratorCard({
 
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
+
+  // Comparativo Protocolados: mês atual x mês passado, buscado só quando a pessoa clica (não
+  // faz sentido puxar isso pra todo mundo de cara — a maioria nunca vai abrir). `diasSerie` já
+  // é o mês inteiro do período selecionado (dia 1 ao último dia), então o mês/ano de referência
+  // vem do primeiro dia dela. Alinha pelo número do dia (1, 2, 3...), não pela data literal,
+  // mesmo padrão do gráfico de evolução do colaborador.
+  async function alternarComparativo() {
+    if (comparativoAberto) {
+      setComparativoAberto(false);
+      return;
+    }
+    setComparativoAberto(true);
+    if (comparativoDados || comparativoCarregando || !sessao || diasSerie.length === 0) return;
+    setComparativoCarregando(true);
+    try {
+      const [ano, mes] = diasSerie[0].split('-').map(Number);
+      const mesAnterior = getMesAnterior(ano, mes);
+      const diasAnterior = listarDiasEntre(mesAnterior.inicio, mesAnterior.fim);
+      const linhasAnterior = await fetchProtocoladosDiarioColaborador(sessao.token, c.nome, mesAnterior.inicio, mesAnterior.fim);
+      const porDiaAnterior = new Map(linhasAnterior.map((l) => [l.dia, l.total]));
+      const totalDias = Math.max(diasSerie.length, diasAnterior.length);
+      const combinado: PontoComparativo[] = Array.from({ length: totalDias }, (_, indice) => ({
+        dia: indice + 1,
+        atual: diasSerie[indice] ? serieProtocoladosUltimosDias[indice] ?? 0 : 0,
+        anterior: diasAnterior[indice] ? porDiaAnterior.get(diasAnterior[indice]) ?? 0 : 0,
+      }));
+      setComparativoDados(combinado);
+      setLabelMesAnterior(mesAnterior.label);
+    } catch {
+      setComparativoDados([]);
+    } finally {
+      setComparativoCarregando(false);
+    }
+  }
 
   return (
     <div
@@ -102,8 +151,51 @@ export function CollaboratorCard({
           </div>
 
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
-            <p className="text-[10px] text-slate-500 mb-1">Protocolados por dia no mês</p>
-            <Sparkline serie={serieProtocoladosUltimosDias} dias={diasSerie} tendencia="estavel" corFixa="#3B82F6" unidade="protocolado" />
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] text-slate-500">Protocolados por dia no mês</p>
+              <button
+                type="button"
+                onClick={alternarComparativo}
+                className="text-[10px] font-medium text-blue-600 hover:text-blue-700 shrink-0 ml-2"
+              >
+                {comparativoAberto ? 'Ver só este mês' : 'Fazer comparativo com o mês passado'}
+              </button>
+            </div>
+
+            {!comparativoAberto && (
+              <Sparkline serie={serieProtocoladosUltimosDias} dias={diasSerie} tendencia="estavel" corFixa="#3B82F6" unidade="protocolado" />
+            )}
+
+            {comparativoAberto && comparativoCarregando && (
+              <div className="h-[140px] flex items-center justify-center text-[11px] text-slate-400">Carregando comparativo...</div>
+            )}
+
+            {comparativoAberto && !comparativoCarregando && comparativoDados && comparativoDados.length > 0 && (
+              <div className="h-[140px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={comparativoDados} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="dia" stroke="#64748b" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} interval={3} />
+                    <YAxis stroke="#64748b" tick={{ fontSize: 9 }} tickLine={false} axisLine={false} width={22} allowDecimals={false} />
+                    <Tooltip
+                      formatter={(v, name) => [formatNumero(Number(v)), name === 'atual' ? 'Este mês' : labelMesAnterior]}
+                      labelFormatter={(dia) => `Dia ${dia}`}
+                      contentStyle={{ fontSize: 11 }}
+                    />
+                    <Legend
+                      formatter={(value) => (value === 'atual' ? 'Este mês' : labelMesAnterior)}
+                      wrapperStyle={{ fontSize: 10 }}
+                    />
+                    <Line type="monotone" dataKey="anterior" name="anterior" stroke="#f97316" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="atual" name="atual" stroke="#3B82F6" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {comparativoAberto && !comparativoCarregando && comparativoDados?.length === 0 && (
+              <p className="text-[11px] text-slate-400 py-4 text-center">Não foi possível carregar o mês passado agora.</p>
+            )}
           </div>
         </div>
       )}
