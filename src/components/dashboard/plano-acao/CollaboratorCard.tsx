@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ChevronRight, Minus, Sparkles } from 'lucide-react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Avatar } from '@/components/ui/Avatar';
@@ -102,7 +103,9 @@ export function CollaboratorCard({
       <div className="flex items-center gap-3">
         <Avatar nome={c.nome} size={44} />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-slate-900 truncate">{c.nome}</p>
+          <Link to={`/colaboradores/${c.id}`} className="text-sm font-semibold text-slate-900 truncate hover:text-blue-600 hover:underline block">
+            {c.nome}
+          </Link>
           <p className="text-[12px] text-slate-500 truncate">{c.time} · {formatCargo(c.cargo)}</p>
         </div>
       </div>
