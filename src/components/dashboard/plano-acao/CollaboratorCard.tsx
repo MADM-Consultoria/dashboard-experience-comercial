@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ChevronRight, Minus, Sparkles } from 'lucide-react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -71,12 +71,7 @@ function BlocoMetricaMensal({
   // `diasSerie` já é o mês inteiro do período selecionado (dia 1 ao último dia), então o
   // mês/ano de referência vem do primeiro dia dela. Alinha pelo número do dia (1, 2, 3...), não
   // pela data literal, mesmo padrão do gráfico de evolução do colaborador.
-  async function alternarComparativo() {
-    if (comparativoAberto) {
-      setComparativoAberto(false);
-      return;
-    }
-    setComparativoAberto(true);
+  async function buscarComparativo() {
     if (comparativoDados || comparativoCarregando || !sessao || diasSerie.length === 0) return;
     setComparativoCarregando(true);
     try {
@@ -100,6 +95,23 @@ function BlocoMetricaMensal({
     }
   }
 
+  function alternarComparativo() {
+    setComparativoAberto((v) => !v);
+  }
+
+  // Se a pessoa clicar em "Fazer comparativo" antes de `diasSerie` (a série do mês inteiro,
+  // buscada uma vez pra equipe toda em PlanoAcaoColaboradores) terminar de carregar, a busca
+  // de antes ficava presa pra sempre — não tinha spinner nem gráfico, e reabrir não ajudava
+  // porque o guard rejeitava de novo. Aqui, sempre que o painel está aberto e ainda falta
+  // buscar (dados null), tenta buscar — e tenta de novo automaticamente assim que `diasSerie`
+  // finalmente chegar.
+  useEffect(() => {
+    if (comparativoAberto && !comparativoDados && !comparativoCarregando) {
+      buscarComparativo();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comparativoAberto, diasSerie]);
+
   return (
     <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
       <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
@@ -121,11 +133,11 @@ function BlocoMetricaMensal({
 
       {!comparativoAberto && <Sparkline serie={serieAtual} dias={diasSerie} tendencia={tendencia} corFixa={corLinha} unidade={unidade} />}
 
-      {comparativoAberto && comparativoCarregando && (
+      {comparativoAberto && !comparativoDados && (
         <div className="h-[140px] flex items-center justify-center text-[11px] text-slate-400">Carregando comparativo...</div>
       )}
 
-      {comparativoAberto && !comparativoCarregando && comparativoDados && comparativoDados.length > 0 && (
+      {comparativoAberto && comparativoDados && comparativoDados.length > 0 && (
         <div className="h-[140px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={comparativoDados} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
@@ -145,7 +157,7 @@ function BlocoMetricaMensal({
         </div>
       )}
 
-      {comparativoAberto && !comparativoCarregando && comparativoDados?.length === 0 && (
+      {comparativoAberto && comparativoDados?.length === 0 && (
         <p className="text-[11px] text-slate-400 py-4 text-center">Não foi possível carregar o mês passado agora.</p>
       )}
     </div>
