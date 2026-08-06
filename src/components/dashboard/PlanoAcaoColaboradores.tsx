@@ -21,15 +21,10 @@ const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'e
 export function PlanoAcaoColaboradores({
   colaboradores,
   diasUteisPeriodo,
-  diasUteisTotaisMes,
   inicioPeriodoSelecionado,
 }: {
   colaboradores: ColaboradorReal[];
   diasUteisPeriodo: number;
-  /** Dias úteis do mês inteiro (não do período filtrado) — usado só pro ritmo diário de
-   * Assinados no card, que precisa da meta diária real (meta mensal ÷ mês inteiro), não da
-   * meta "diária" distorcida que dá pra calcular quando o filtro só cobre 1 ou 2 dias. */
-  diasUteisTotaisMes: number;
   /** Data de início do filtro de calendário do topo — o mini-gráfico usa o mês inteiro (dia 1
    * ao último dia) desse mês, não sempre o mês real corrente, pra respeitar o mesmo filtro que
    * o resto da tela já usa (as métricas de cada colaborador já vêm filtradas por período). */
@@ -170,7 +165,6 @@ export function PlanoAcaoColaboradores({
               colaborador={x.colaborador}
               media={media}
               diasUteisPeriodo={diasUteisPeriodo}
-              diasUteisTotaisMes={diasUteisTotaisMes}
               serieUltimosDias={seriesPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
               serieProtocoladosUltimosDias={seriesProtocoladosPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
               diasSerie={diasSerie}

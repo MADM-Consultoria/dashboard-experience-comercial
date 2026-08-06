@@ -1,32 +1,34 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, FileCheck2, FileSignature, Gauge, Inbox, Minus, Percent, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, Minus, Sparkles } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ScoreCircle } from './ScoreCircle';
 import { Sparkline } from './Sparkline';
-import { MetricRow } from './MetricRow';
-import { QuadradosRitmo } from './QuadradosRitmo';
 import { QuickActions } from './QuickActions';
-import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, mediaDiaColaborador, type MediaEquipe } from './score';
-import { formatCargo, formatNumero, formatPct } from '@/lib/format';
+import { calcularScoreInteligente, calcularTendenciaSerie, gerarRecomendacoesIA, type MediaEquipe } from './score';
+import { formatCargo } from '@/lib/format';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 
 interface CollaboratorCardProps {
   colaborador: ColaboradorReal;
   media: MediaEquipe;
   diasUteisPeriodo: number;
-  diasUteisTotaisMes: number;
   serieUltimosDias: number[];
   serieProtocoladosUltimosDias: number[];
   diasSerie: string[];
   indice: number;
 }
 
+/**
+ * Card do Plano de Ação: por padrão mostra só o essencial pra bater o olho (quem é, status,
+ * score) — a análise em si (mensagem da IA + gráficos) fica escondida até clicar em "Ver plano
+ * de ação". Números crus de Recebidos/Assinados/Protocolados/Conversão não aparecem mais aqui
+ * (já existem em Equipe/Ranking/Colaborador); esse card é só o diagnóstico e o plano.
+ */
 export function CollaboratorCard({
   colaborador: c,
   media,
   diasUteisPeriodo,
-  diasUteisTotaisMes,
   serieUltimosDias,
   serieProtocoladosUltimosDias,
   diasSerie,
@@ -45,30 +47,6 @@ export function CollaboratorCard({
       : 'Sem meta cadastrada — Assinados comparado com a média da equipe em vez de 0%.');
   const tendencia = calcularTendenciaSerie(serieUltimosDias);
   const recomendacoes = gerarRecomendacoesIA(c, media, diasUteisPeriodo, tendencia, banda, score, serieUltimosDias);
-  const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
-
-  // Ritmo de hoje (quadradinhos): meta diária = meta mensal ÷ dias úteis do MÊS INTEIRO (não do
-  // período filtrado — se o filtro for só 1 ou 2 dias, dividir por eles infla a meta diária pra
-  // dezenas de quadrados). Arredondada pra cima. "Hoje" é achado pelo índice da data de hoje na
-  // série do mês — se o período filtrado não inclui hoje (ex: mês passado), não tem ritmo de
-  // hoje pra mostrar. Mesma lógica pra Assinados e Protocolados, cada um com sua própria meta.
-  const hojeISO = (() => {
-    const hoje = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${hoje.getFullYear()}-${pad(hoje.getMonth() + 1)}-${pad(hoje.getDate())}`;
-  })();
-  const indiceHoje = diasSerie.indexOf(hojeISO);
-
-  // `?? 0`: se "hoje" está na série mas o dado daquele índice ainda não chegou (ex: fetch de
-  // protocolados terminando depois do de assinados), zero é o valor correto — não "sem dado".
-  // "Sem dado" é só quando hoje nem está no período filtrado (indiceHoje === -1).
-  // Assinados sempre com 4 quadrados fixos em todos os cards (decisão visual — não varia
-  // conforme a meta de cada colaborador, diferente de Protocolados).
-  const numQuadradosAssinados = 4;
-  const assinadosHoje = indiceHoje >= 0 ? serieUltimosDias[indiceHoje] ?? 0 : undefined;
-
-  const numQuadradosProtocolados = c.metaProtocolados > 0 && diasUteisTotaisMes > 0 ? Math.max(1, Math.ceil(c.metaProtocolados / diasUteisTotaisMes)) : 0;
-  const protocoladosHoje = indiceHoje >= 0 ? serieProtocoladosUltimosDias[indiceHoje] ?? 0 : undefined;
 
   const IconeTendencia = tendencia === 'subindo' ? ArrowUp : tendencia === 'caindo' ? ArrowDown : Minus;
   const corTendencia = tendencia === 'subindo' ? '#22C55E' : tendencia === 'caindo' ? '#EF4444' : '#94A3B8';
@@ -97,68 +75,21 @@ export function CollaboratorCard({
         <StatusPill status={banda} />
       </div>
 
-      {/* Resumo do problema — só a recomendação mais relevante, sem precisar expandir pra saber o que fazer */}
-      {recomendacoes.length > 0 && (
-        <p className="flex items-start gap-1.5 text-[12px] text-slate-600 dark:text-slate-300 leading-snug rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 p-3">
-          <Sparkles size={12} className="text-blue-500 mt-0.5 shrink-0" />
-          {recomendacoes[0]}
-        </p>
-      )}
-
+      {/* Plano de ação (mensagem da IA + gráficos pequenos) só aparece depois de clicar em "Ver
+         plano de ação" — o card fechado fica só com o essencial pra bater o olho na grade toda. */}
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
-          {/* Todas as métricas com a mesma casca visual (ícone + destaque colorido) — Recebidos,
-             Média/Dia e Conversão não têm meta real pra virar barra de progresso, então mostram
-             só o valor; Assinados e Protocolados usam a mesma casca, mas com os quadradinhos de
-             ritmo diário como conteúdo. */}
-          <div className="space-y-2.5">
-            <MetricRow
-              icon={Inbox}
-              cor="#22C55E"
-              label="Recebidos"
-              titulo="Total de leads recebidos no período. Não tem meta nem média de equipe — depende da distribuição de leads, não do colaborador."
-              value={formatNumero(c.recebidos)}
-            />
-            <MetricRow
-              icon={Gauge}
-              cor="#22C55E"
-              label="Média/Dia"
-              titulo={`Cálculo real: ${formatNumero(c.assinados)} assinado(s) no período selecionado ÷ ${diasUteisPeriodo} dia(s) útil(eis) do período = ${mediaDia.toFixed(2)} assinados/dia útil.`}
-              value={`${mediaDia.toFixed(1)} assinados/dia`}
-            />
-            <MetricRow icon={FileSignature} cor="#22C55E" label="Assinados">
-              <QuadradosRitmo
-                label="Assinados"
-                valorMes={c.assinados}
-                meta={c.metaMensal}
-                metaLabel={`${formatNumero(c.metaMensal)} meta`}
-                valorHoje={assinadosHoje}
-                numQuadrados={numQuadradosAssinados}
-              />
-            </MetricRow>
-            <MetricRow icon={FileCheck2} cor="#22C55E" label="Protocolados">
-              <QuadradosRitmo
-                label="Protocolados"
-                valorMes={c.protocolados}
-                meta={c.metaProtocolados}
-                metaLabel={`${formatNumero(c.metaProtocolados)} meta`}
-                valorHoje={protocoladosHoje}
-                numQuadrados={numQuadradosProtocolados}
-              />
-            </MetricRow>
-            <MetricRow
-              icon={Percent}
-              cor="#22C55E"
-              label="Conversão"
-              titulo="Percentual de leads recebidos que viraram contrato assinado."
-              value={formatPct(c.conversaoRecebidosAssinados, 1)}
-            />
-          </div>
+          {recomendacoes.length > 0 && (
+            <p className="flex items-start gap-1.5 text-[12px] text-slate-600 dark:text-slate-300 leading-snug rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 p-3">
+              <Sparkles size={12} className="text-blue-500 mt-0.5 shrink-0" />
+              {recomendacoes[0]}
+            </p>
+          )}
 
           {/* Tendência do mês (dia 1 até hoje) — passe o cursor sobre a linha pra ver o dia e o valor de cada ponto */}
           <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] text-slate-500">Assinados por dia no mês (passe o cursor pra ver os valores)</p>
+              <p className="text-[10px] text-slate-500">Assinados por dia no mês</p>
               <span
                 className="text-[10px] font-medium flex items-center gap-0.5 shrink-0 ml-2"
                 style={{ color: corTendencia }}
@@ -168,6 +99,11 @@ export function CollaboratorCard({
               </span>
             </div>
             <Sparkline serie={serieUltimosDias} dias={diasSerie} tendencia={tendencia} />
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-700">
+            <p className="text-[10px] text-slate-500 mb-1">Protocolados por dia no mês</p>
+            <Sparkline serie={serieProtocoladosUltimosDias} dias={diasSerie} tendencia="estavel" corFixa="#3B82F6" unidade="protocolado" />
           </div>
         </div>
       )}

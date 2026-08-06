@@ -317,7 +317,6 @@ export default function VisaoGeral() {
         <PlanoAcaoColaboradores
           colaboradores={colaboradores}
           diasUteisPeriodo={diasUteisPeriodoSelecionado}
-          diasUteisTotaisMes={diasUteisTotaisMes}
           inicioPeriodoSelecionado={periodoSelecionado.inicio}
         />
       </div>
