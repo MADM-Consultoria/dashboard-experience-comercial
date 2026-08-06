@@ -15,9 +15,13 @@ export default function Comercial() {
   const conversaoRecebidosAssinados = colaboradores.length ? colaboradores.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / colaboradores.length : 0;
 
   const assinadosJudit = colaboradores.reduce((a, c) => a + c.assinadosJudit, 0);
-  const metaMensalJudit = kpi.metaMensalEquipe;
+  // METAS FIXAS: madm.view_relatorio_judit está com 0 linhas no banco agora, então
+  // kpi.metaMensalEquipe vem 0. Combinado com a operação: usar os números oficiais do mês
+  // (2.724 geral, 1.498 Judit) fixos enquanto isso — trocar assim que a view voltar a ter dado.
+  const metaMensalGeral = kpi.metaMensalEquipe || 2724;
+  const metaMensalJudit = kpi.metaMensalEquipe || 1498;
 
-  const paceEquipe = calcularPaceProjecao(kpi.totalAssinados, kpi.metaMensalEquipe, diasUteisDecorridos, diasUteisTotaisMes);
+  const paceEquipe = calcularPaceProjecao(kpi.totalAssinados, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(assinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
 
   if (loading) {
@@ -43,7 +47,7 @@ export default function Comercial() {
 
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4 mb-6">
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={kpi.metaMensalEquipe} pace={paceEquipe} />
+          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={metaMensalGeral} pace={paceEquipe} />
         </div>
         <div className="xl:col-span-2">
           <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} />
