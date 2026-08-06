@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getMesCompletoDoCalendario, listarDiasEntre } from '@/lib/period';
 import { fetchAssinadosDiarioTodos } from '@/lib/assinadosDiarioColaborador';
 import { fetchProtocoladosDiarioTodos } from '@/lib/protocoladosDiarioColaborador';
+import { fetchVendaGanhaDiarioTodos } from '@/lib/vendaGanhaDiarioColaborador';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { NivelStatus } from '@/types/domain';
@@ -34,6 +35,7 @@ export function PlanoAcaoColaboradores({
   const [filtroStatus, setFiltroStatus] = useState<NivelStatus | null>(null);
   const [seriesPorConsultor, setSeriesPorConsultor] = useState<Map<string, number[]>>(new Map());
   const [seriesProtocoladosPorConsultor, setSeriesProtocoladosPorConsultor] = useState<Map<string, number[]>>(new Map());
+  const [seriesVendaGanhaPorConsultor, setSeriesVendaGanhaPorConsultor] = useState<Map<string, number[]>>(new Map());
   const [diasSerie, setDiasSerie] = useState<string[]>([]);
 
   // Só quem realmente produz E ainda está ativo entra no plano de ação — ex-funcionário
@@ -83,6 +85,14 @@ export function PlanoAcaoColaboradores({
       })
       .catch(() => {
         if (!cancelado) setSeriesProtocoladosPorConsultor(new Map());
+      });
+
+    fetchVendaGanhaDiarioTodos(sessao.token, inicio, fim)
+      .then((porConsultor) => {
+        if (!cancelado) setSeriesVendaGanhaPorConsultor(montarSeries(porConsultor));
+      })
+      .catch(() => {
+        if (!cancelado) setSeriesVendaGanhaPorConsultor(new Map());
       });
 
     return () => {
@@ -167,6 +177,7 @@ export function PlanoAcaoColaboradores({
               diasUteisPeriodo={diasUteisPeriodo}
               serieUltimosDias={seriesPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
               serieProtocoladosUltimosDias={seriesProtocoladosPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
+              serieVendaGanhaUltimosDias={seriesVendaGanhaPorConsultor.get(normalizarNome(x.colaborador.nome)) ?? []}
               diasSerie={diasSerie}
               indice={indice}
             />
