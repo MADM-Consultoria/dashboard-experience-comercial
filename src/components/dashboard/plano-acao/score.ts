@@ -55,23 +55,23 @@ export const BANDA_LABEL: Record<NivelStatus, string> = {
 
 /**
  * Score Inteligente (0-100), pesos definidos com a operação:
- *   Conversão (Assinados → Protocolados)  40%
- *   Protocolados (vs. média da equipe)    25%
- *   Assinados (vs. meta real do mês)      20%
- *   Média/Dia (vs. média da equipe)       15%
+ *   Conversão (Recebidos → Assinados)      40%
+ *   Protocolados (Assinados → Protocolados) 25%
+ *   Assinados (vs. meta real do mês)        20%
+ *   Média/Dia (vs. média da equipe)         15%
  * Cada componente é normalizado 0-100 antes de aplicar o peso — nenhum deles usa uma meta
- * inventada: Assinados usa a meta real do banco, os outros três usam a média real da equipe
- * que está sendo exibida no momento (mesmo grupo, mesmo período).
+ * inventada: Assinados usa a meta real do banco, Média/Dia usa a média real da equipe que está
+ * sendo exibida no momento (mesmo grupo, mesmo período); Conversão e Protocolados são taxas
+ * próprias do colaborador (não comparam com a equipe).
  *
  * Quem não tem meta mensal cadastrada (metaMensal = 0, mostrado como "sem meta" no card) NÃO
  * pode ter o componente Assinados contado como 0% — isso penalizava silenciosamente quem nem
  * deveria estar sendo medido contra uma meta que não existe. Nesse caso, compara com a média
- * de assinados da equipe em vez da meta pessoal (mesmo padrão já usado em Protocolados e
- * Média/Dia, que também caem pra média da equipe).
+ * de assinados da equipe em vez da meta pessoal (mesmo padrão já usado em Média/Dia).
  */
 export function calcularScoreInteligente(c: ColaboradorReal, media: MediaEquipe, diasUteisPeriodo: number): ScoreResultado {
-  const conversaoScore = Math.min(100, c.conversaoAssinadosProtocolados);
-  const protocoladosScore = media.protocolados > 0 ? Math.min(100, (c.protocolados / media.protocolados) * 100) : c.protocolados > 0 ? 100 : 0;
+  const conversaoScore = Math.min(100, c.conversaoRecebidosAssinados);
+  const protocoladosScore = Math.min(100, c.conversaoAssinadosProtocolados);
   const assinadosUsouMeta = c.metaMensal > 0;
   const assinadosScore = assinadosUsouMeta
     ? Math.min(100, c.atingimentoMetaMensal)
