@@ -10,9 +10,11 @@ export interface MediaEquipe {
   recebidos: number;
   protocolados: number;
   mediaDia: number;
-  /** Só usada como fallback do componente "Assinados" do Score pra quem não tem meta
-   * cadastrada (ver calcularScoreInteligente) — não vira barra de comparação no card. */
+  /** Só usada como fallback do componente "Assinados" da classificação pra quem não tem meta
+   * cadastrada (ver calcularClassificacao) — não vira barra de comparação no card. */
   assinados: number;
+  /** Referência do componente "Venda Ganha" da classificação. */
+  vendaGanha: number;
 }
 
 export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisPeriodo: number): MediaEquipe {
@@ -22,6 +24,7 @@ export function calcularMediaEquipe(colaboradores: ColaboradorReal[], diasUteisP
     protocolados: colaboradores.reduce((a, c) => a + c.protocolados, 0) / n,
     mediaDia: diasUteisPeriodo > 0 ? colaboradores.reduce((a, c) => a + c.assinados, 0) / diasUteisPeriodo / n : 0,
     assinados: colaboradores.reduce((a, c) => a + c.assinados, 0) / n,
+    vendaGanha: colaboradores.reduce((a, c) => a + c.vendaGanha, 0) / n,
   };
 }
 
@@ -29,49 +32,47 @@ export function mediaDiaColaborador(c: ColaboradorReal, diasUteisPeriodo: number
   return diasUteisPeriodo > 0 ? c.assinados / diasUteisPeriodo : 0;
 }
 
-export interface ScoreResultado {
-  score: number; // 0-100
+export interface ClassificacaoResultado {
   banda: NivelStatus;
-  /** Sub-notas 0-100 de cada componente antes do peso — só pra montar um tooltip auditável
-   * (mostrar exatamente de onde veio o número quando alguém questionar o score de alguém). */
+  /** Índice interno 0-100 usado só pra ordenar os cards (melhores primeiro) — não é exibido em
+   * lugar nenhum da tela, só a banda (Excelente/Bom/Atenção/Alerta/Crítico) que ele define. */
+  indice: number;
+  /** Sub-notas 0-100 de cada componente antes do peso — usadas só internamente (ordenação e
+   * complemento das mensagens da IA). Não tem número final auditável exposto na tela: a
+   * classificação é o próprio resultado, sem um "score" separado pra alguém ter que validar. */
   detalhe: {
-    conversaoScore: number;
-    protocoladosScore: number;
     assinadosScore: number;
     /** true = comparou com a meta pessoal real; false = sem meta cadastrada, comparou com a
-     * média da equipe em vez disso (ver calcularScoreInteligente). */
+     * média da equipe em vez disso (ver calcularClassificacao). */
     assinadosUsouMeta: boolean;
-    mediaDiaScore: number;
+    protocoladosScore: number;
+    vendaGanhaScore: number;
   };
 }
 
 export const BANDA_LABEL: Record<NivelStatus, string> = {
-  excelente: '90-100 · Excelente',
-  bom: '70-89 · Bom',
-  atencao: '50-69 · Atenção',
-  alerta: '30-49 · Alerta',
-  critico: '0-29 · Crítico',
+  excelente: 'Excelente',
+  bom: 'Bom',
+  atencao: 'Atenção',
+  alerta: 'Alerta',
+  critico: 'Crítico',
 };
 
 /**
- * Score Inteligente (0-100), pesos definidos com a operação:
- *   Conversão (Recebidos → Assinados)      40%
- *   Protocolados (Assinados → Protocolados) 25%
- *   Assinados (vs. meta real do mês)        20%
- *   Média/Dia (vs. média da equipe)         15%
- * Cada componente é normalizado 0-100 antes de aplicar o peso — nenhum deles usa uma meta
- * inventada: Assinados usa a meta real do banco, Média/Dia usa a média real da equipe que está
- * sendo exibida no momento (mesmo grupo, mesmo período); Conversão e Protocolados são taxas
- * próprias do colaborador (não comparam com a equipe).
+ * Classificação do colaborador (Excelente/Bom/Atenção/Alerta/Crítico), definida com a
+ * operação a partir de só 3 métricas — Assinados, Protocolados e Venda Ganha —, sem misturar
+ * outras taxas (conversão, média/dia) que exigiam explicar uma fórmula própria pra alguém
+ * questionar. Pesos:
+ *   Assinados (vs. meta real do mês)   50%
+ *   Protocolados (vs. média da equipe) 25%
+ *   Venda Ganha (vs. média da equipe)  25%
  *
  * Quem não tem meta mensal cadastrada (metaMensal = 0, mostrado como "sem meta" no card) NÃO
  * pode ter o componente Assinados contado como 0% — isso penalizava silenciosamente quem nem
  * deveria estar sendo medido contra uma meta que não existe. Nesse caso, compara com a média
- * de assinados da equipe em vez da meta pessoal (mesmo padrão já usado em Média/Dia).
+ * de assinados da equipe em vez da meta pessoal.
  */
-export function calcularScoreInteligente(c: ColaboradorReal, media: MediaEquipe, diasUteisPeriodo: number): ScoreResultado {
-  const conversaoScore = Math.min(100, c.conversaoRecebidosAssinados);
-  const protocoladosScore = Math.min(100, c.conversaoAssinadosProtocolados);
+export function calcularClassificacao(c: ColaboradorReal, media: MediaEquipe): ClassificacaoResultado {
   const assinadosUsouMeta = c.metaMensal > 0;
   const assinadosScore = assinadosUsouMeta
     ? Math.min(100, c.atingimentoMetaMensal)
@@ -80,17 +81,17 @@ export function calcularScoreInteligente(c: ColaboradorReal, media: MediaEquipe,
       : c.assinados > 0
         ? 100
         : 0;
-  const mediaDia = mediaDiaColaborador(c, diasUteisPeriodo);
-  const mediaDiaScore = media.mediaDia > 0 ? Math.min(100, (mediaDia / media.mediaDia) * 100) : mediaDia > 0 ? 100 : 0;
+  const protocoladosScore = media.protocolados > 0 ? Math.min(100, (c.protocolados / media.protocolados) * 100) : c.protocolados > 0 ? 100 : 0;
+  const vendaGanhaScore = media.vendaGanha > 0 ? Math.min(100, (c.vendaGanha / media.vendaGanha) * 100) : c.vendaGanha > 0 ? 100 : 0;
 
-  const score = conversaoScore * 0.4 + protocoladosScore * 0.25 + assinadosScore * 0.2 + mediaDiaScore * 0.15;
-  const arredondado = Math.round(score);
+  const indice = assinadosScore * 0.5 + protocoladosScore * 0.25 + vendaGanhaScore * 0.25;
+  const arredondado = Math.round(indice);
 
   const banda: NivelStatus = arredondado >= 90 ? 'excelente' : arredondado >= 70 ? 'bom' : arredondado >= 50 ? 'atencao' : arredondado >= 30 ? 'alerta' : 'critico';
   return {
-    score: arredondado,
     banda,
-    detalhe: { conversaoScore, protocoladosScore, assinadosScore, assinadosUsouMeta, mediaDiaScore },
+    indice: arredondado,
+    detalhe: { assinadosScore, assinadosUsouMeta, protocoladosScore, vendaGanhaScore },
   };
 }
 
@@ -210,7 +211,6 @@ export function gerarRecomendacoesIA(
   diasUteisPeriodo: number,
   tendencia: 'subindo' | 'caindo' | 'estavel',
   banda: NivelStatus,
-  score: number,
   serie: number[],
 ): string[] {
   const recomendacoes: string[] = [];
@@ -255,12 +255,12 @@ export function gerarRecomendacoesIA(
 
     let mensagem: string;
     if (zerou && bandaBoa) {
-      // Score ainda bom mas zerou de vez — provavelmente pausa pontual (férias, licença,
+      // Classificação ainda boa mas zerou de vez — provavelmente pausa pontual (férias, licença,
       // trocou de carteira), não desempenho ruim. O complemento busca algo real que distinga
       // esse caso do de outra pessoa na mesma situação, em vez de repetir a mesma frase.
-      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas o score (${score}) ainda está em ${BANDA_LABEL[banda].split(' · ')[1].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
+      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas a classificação ainda está em ${BANDA_LABEL[banda].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
     } else if (zerou) {
-      mensagem = `Zerou os assinados na 2ª metade do mês depois de ${antes} na 1ª, e o score (${score}) já reflete isso. Conversa individual essa semana pra entender a causa antes que o mês feche assim.`;
+      mensagem = `Zerou os assinados na 2ª metade do mês depois de ${antes} na 1ª. Conversa individual essa semana pra entender a causa antes que o mês feche assim.`;
     } else if (quedaPct >= 50) {
       mensagem = `Caiu ${quedaPct}% nos assinados — de ${antes} na 1ª metade do mês pra ${depois} na 2ª. Queda grande o bastante pra tratar como prioridade, não só acompanhar.`;
     } else {
@@ -277,12 +277,12 @@ export function gerarRecomendacoesIA(
 
   if (banda === 'excelente') {
     recomendacoes.push(
-      `Score ${score}, ${formatPct(c.conversaoRecebidosAssinados, 1)} de conversão e ${formatNumero(c.assinados)} assinados no período — desempenho de destaque. Reconhecer publicamente e usar como exemplo de abordagem com a equipe.`,
+      `${formatPct(c.conversaoRecebidosAssinados, 1)} de conversão e ${formatNumero(c.assinados)} assinados no período — desempenho de destaque. Reconhecer publicamente e usar como exemplo de abordagem com a equipe.`,
     );
   }
 
   if (recomendacoes.length === 0) {
-    recomendacoes.push(`Score ${score}, sem pontos críticos no momento — manter o acompanhamento de rotina.`);
+    recomendacoes.push('Sem pontos críticos no momento — manter o acompanhamento de rotina.');
   }
   return recomendacoes;
 }

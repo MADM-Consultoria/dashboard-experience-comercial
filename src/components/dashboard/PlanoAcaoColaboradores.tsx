@@ -14,7 +14,7 @@ import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 import { CollaboratorCard } from './plano-acao/CollaboratorCard';
 import { RelogioBrasilia } from './plano-acao/RelogioBrasilia';
-import { calcularMediaEquipe, calcularScoreInteligente } from './plano-acao/score';
+import { calcularClassificacao, calcularMediaEquipe } from './plano-acao/score';
 
 const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'excelente'];
 
@@ -94,8 +94,8 @@ export function PlanoAcaoColaboradores({
   const media = useMemo(() => calcularMediaEquipe(comProducao, diasUteisPeriodo), [comProducao, diasUteisPeriodo]);
 
   const comScore = useMemo(
-    () => comProducao.map((c) => ({ colaborador: c, ...calcularScoreInteligente(c, media, diasUteisPeriodo) })),
-    [comProducao, media, diasUteisPeriodo],
+    () => comProducao.map((c) => ({ colaborador: c, ...calcularClassificacao(c, media) })),
+    [comProducao, media],
   );
 
   const precisamAtencao = useMemo(
@@ -107,7 +107,7 @@ export function PlanoAcaoColaboradores({
   // precisa, sem a grade inteira abrir liderada pelos piores casos.
   const linhas = comScore
     .filter((x) => !filtroStatus || x.banda === filtroStatus)
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.indice - a.indice);
 
   return (
     <Card>
