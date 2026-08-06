@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, Minus, Sparkles } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronRight, Minus, Sparkles } from 'lucide-react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
@@ -156,9 +156,12 @@ export function CollaboratorCard({
               <button
                 type="button"
                 onClick={alternarComparativo}
-                className="text-[10px] font-medium text-blue-600 hover:text-blue-700 shrink-0 ml-2"
+                className="group flex items-center gap-0.5 text-[10px] font-medium text-blue-600 hover:text-blue-700 shrink-0 ml-2"
               >
-                {comparativoAberto ? 'Ver só este mês' : 'Fazer comparativo com o mês passado'}
+                <span className="underline decoration-blue-300 decoration-dotted underline-offset-2 transition-all duration-150 group-hover:decoration-blue-600 group-hover:decoration-solid">
+                  {comparativoAberto ? 'Ver só este mês' : 'Fazer comparativo com o mês passado'}
+                </span>
+                <ChevronRight size={11} className="shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
               </button>
             </div>
 
