@@ -15,9 +15,9 @@ export default function Comercial() {
   const conversaoRecebidosAssinados = colaboradores.length ? colaboradores.reduce((a, c) => a + c.conversaoRecebidosAssinados, 0) / colaboradores.length : 0;
 
   const assinadosJudit = colaboradores.reduce((a, c) => a + c.assinadosJudit, 0);
-  // METAS FIXAS: madm.view_relatorio_judit está com 0 linhas no banco agora, então
-  // kpi.metaMensalEquipe vem 0. Combinado com a operação: usar os números oficiais do mês
-  // (2.724 geral, 1.498 Judit) fixos enquanto isso — trocar assim que a view voltar a ter dado.
+  // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então
+  // kpi.metaMensalEquipe vem sempre 0. Os números oficiais do mês (2.724 geral, 1.498 Judit)
+  // são fixos aqui — atualizar direto no código quando a meta do mês mudar.
   const metaMensalGeral = kpi.metaMensalEquipe || 2724;
   const metaMensalJudit = kpi.metaMensalEquipe || 1498;
 

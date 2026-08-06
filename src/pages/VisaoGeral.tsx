@@ -57,11 +57,10 @@ export default function VisaoGeral() {
     assinados: assinadosJuditPorConsultor.get(normalizarNome(c.nome)) ?? 0,
   }));
 
-  // METAS FIXAS: madm.view_relatorio_judit está com 0 linhas no banco agora, então nenhum
-  // colaborador tem metaMensal real (todos vêm sintéticos, meta 0) até a view voltar a ser
-  // populada. Combinado com a operação: usar os números oficiais do mês (2.724 geral, 1.498
-  // Judit) fixos nos dois cards enquanto isso — trocar pela soma real das metas assim que a
-  // view voltar a ter dado (é só remover o "|| 2724"/"|| 1498").
+  // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então
+  // nenhum colaborador tem metaMensal individual vindo do banco. Os números oficiais do mês
+  // (2.724 geral, 1.498 Judit) são fixos aqui — atualizar direto no código quando a meta do
+  // mês mudar.
   const metaMensalGeral = kpi.metaMensalEquipe || 2724;
   const metaMensalJudit = colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0) || 1498;
 
