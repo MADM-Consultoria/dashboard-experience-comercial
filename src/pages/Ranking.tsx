@@ -44,6 +44,11 @@ function CardPodio({ item, tipo }: { item: RankingItem; tipo: TipoRanking }) {
         <span className="text-sm font-bold mt-1" style={{ color: estilo.cor }}>
           {formatarValor(tipo, item.valor)}
         </span>
+        {tipo === 'conversao' && (
+          <span className="text-[10px] text-slate-400">
+            {formatNumero(item.colaborador.assinados)} de {formatNumero(item.colaborador.recebidos)} recebidos
+          </span>
+        )}
       </Link>
       <div
         className={clsx('w-24 md:w-28 mt-3 rounded-t-lg flex flex-col items-center justify-start pt-3 gap-1.5 shadow-lg', estilo.altura)}
@@ -127,7 +132,14 @@ export default function Ranking() {
                     </Link>
                   </td>
                   <td className="py-2.5 pr-4 text-slate-500">{item.colaborador.time}</td>
-                  <td className="py-2.5 pr-4 text-slate-700 font-semibold">{formatarValor(tipo, item.valor)}</td>
+                  <td className="py-2.5 pr-4 text-slate-700 font-semibold">
+                    {formatarValor(tipo, item.valor)}
+                    {tipo === 'conversao' && (
+                      <span className="ml-1.5 text-[11px] font-normal text-slate-400">
+                        ({formatNumero(item.colaborador.assinados)}/{formatNumero(item.colaborador.recebidos)})
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2.5 pr-4">
                     <span className="inline-flex items-center gap-1.5 text-slate-600">
                       {(() => {
