@@ -75,7 +75,7 @@ export default function VisaoGeral() {
   // (Assinados e Recebidos) — não mais o canal do colaborador nem madm.view_relatorio_judit.
   const conversaoGeralPeriodo = kpi.totalRecebidos > 0 ? (kpi.totalAssinados / kpi.totalRecebidos) * 100 : 0;
   const conversaoJuditPeriodo = kpi.totalRecebidosJudit > 0 ? (totalAssinadosJudit / kpi.totalRecebidosJudit) * 100 : 0;
-  const atingimentoMetaPeriodo = kpi.metaMensalEquipe > 0 ? (kpi.totalAssinados / kpi.metaMensalEquipe) * 100 : 0;
+  const atingimentoMetaPeriodo = metaMensalGeral > 0 ? (kpi.totalAssinados / metaMensalGeral) * 100 : 0;
   const metaComprometida = atingimentoMetaPeriodo < 90;
 
   const times = Array.from(new Set(colaboradores.map((c) => c.time)));
