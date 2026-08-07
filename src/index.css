@@ -93,34 +93,35 @@ body {
  * delays opostos, imitando o padrão real de corrida (braço direito avança com a perna
  * esquerda, e vice-versa). */
 :root {
-  --pc-duracao: 0.55s;
+  --pc-duracao: 0.42s;
 }
 
-/* Coxa: balança da frente (-40°) pra trás (+34°). */
+/* Coxa: passada de corrida mesmo — joelho sobe alto na frente (-56°) e a perna estica bem
+ * atrás no impulso (+42°). Amplitude menor que isso lê como caminhada. */
 @keyframes pcCoxa {
+  0%   { transform: rotate(-56deg); }
+  50%  { transform: rotate(42deg); }
+  100% { transform: rotate(-56deg); }
+}
+/* Canela: quase esticada no apoio/impulso, calcanhar quase no bumbum na recuperação —
+ * o pico da dobra acontece enquanto a coxa volta pra frente (75% do ciclo da coxa). */
+@keyframes pcCanela {
+  0%   { transform: rotate(4deg); }
+  35%  { transform: rotate(26deg); }
+  55%  { transform: rotate(58deg); }
+  78%  { transform: rotate(104deg); }
+  100% { transform: rotate(4deg); }
+}
+/* Braço: dobrado fixo no cotovelo (desenho), bombando do ombro em contra-fase à perna. */
+@keyframes pcBraco {
   0%   { transform: rotate(-40deg); }
   50%  { transform: rotate(34deg); }
   100% { transform: rotate(-40deg); }
 }
-/* Canela: quase esticada no apoio/impulso, bem dobrada (calcanhar sobe) na recuperação —
- * o pico da dobra acontece enquanto a coxa volta pra frente (75% do ciclo da coxa). */
-@keyframes pcCanela {
-  0%   { transform: rotate(10deg); }
-  35%  { transform: rotate(30deg); }
-  55%  { transform: rotate(52deg); }
-  78%  { transform: rotate(88deg); }
-  100% { transform: rotate(10deg); }
-}
-/* Braço: dobrado fixo no cotovelo (desenho), balançando do ombro em contra-fase à perna. */
-@keyframes pcBraco {
-  0%   { transform: rotate(-30deg); }
-  50%  { transform: rotate(26deg); }
-  100% { transform: rotate(-30deg); }
-}
 /* Bounce vertical do corpo — 2 apoios por ciclo, então metade da duração. */
 @keyframes pcCorpo {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-1.8px); }
+  50%      { transform: translateY(-2.6px); }
 }
 @keyframes pcSombra {
   0%, 100% { transform: scaleX(1); opacity: 0.15; }
