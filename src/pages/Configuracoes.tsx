@@ -11,16 +11,20 @@ interface StatusCache {
   atualizadoEm: string;
   janela: { inicio: string; fim: string };
   ultimoErro?: string;
+  /** Intervalo configurado (DASHBOARD_CACHE_INTERVALO_MS no backend) entre atualizações reais no banco. */
+  intervaloMs: number;
 }
 
-/** Formata "há quanto tempo" em português, sem depender de biblioteca externa. */
-function formatarHaQuanto(iso: string): string {
-  const segundos = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
-  if (segundos < 60) return `há ${segundos}s`;
-  const minutos = Math.floor(segundos / 60);
-  if (minutos < 60) return `há ${minutos} min`;
-  const horas = Math.floor(minutos / 60);
-  return `há ${horas}h`;
+/** Quanto falta pra próxima atualização (atualizadoEm + intervaloMs − agora), em português —
+ * "agora" é passado à parte (não `Date.now()` direto) pra o componente poder re-renderizar a
+ * cada segundo com um tick externo, senão o texto ficaria parado até o próximo fetch. */
+function formatarFaltam(iso: string, intervaloMs: number, agora: number): string {
+  const restanteMs = new Date(iso).getTime() + intervaloMs - agora;
+  if (restanteMs <= 0) return 'atualizando...';
+  const segundos = Math.ceil(restanteMs / 1000);
+  if (segundos < 60) return `em ${segundos}s`;
+  const minutos = Math.ceil(segundos / 60);
+  return `em ${minutos} min`;
 }
 
 /** Busca e mostra quando o cache central de dados do dashboard (ver `dashboardCache.ts` no
@@ -33,20 +37,29 @@ function useStatusCache(sessao: ReturnType<typeof useAuth>['sessao']) {
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
-    setCarregando(true);
-    fetch('/api/cache-status', { headers: { Authorization: `Bearer ${sessao.token}` } })
-      .then((r) => r.json())
-      .then((dados) => {
-        if (!cancelado) setStatus(dados);
-      })
-      .catch(() => {
-        if (!cancelado) setStatus(null);
-      })
-      .finally(() => {
-        if (!cancelado) setCarregando(false);
-      });
+
+    function buscar(primeiraVez: boolean) {
+      if (primeiraVez) setCarregando(true);
+      fetch('/api/cache-status', { headers: { Authorization: `Bearer ${sessao!.token}` } })
+        .then((r) => r.json())
+        .then((dados) => {
+          if (!cancelado) setStatus(dados);
+        })
+        .catch(() => {
+          if (!cancelado && primeiraVez) setStatus(null);
+        })
+        .finally(() => {
+          if (!cancelado) setCarregando(false);
+        });
+    }
+
+    buscar(true);
+    // Rebusca periodicamente pra pegar o `atualizadoEm` real assim que o cron rodar de novo —
+    // senão a contagem regressiva chegaria em "atualizando..." e ficaria presa nisso pra sempre.
+    const id = setInterval(() => buscar(false), 15_000);
     return () => {
       cancelado = true;
+      clearInterval(id);
     };
   }, [sessao]);
 
@@ -58,6 +71,14 @@ export default function Configuracoes() {
   const { sessao } = useAuth();
   const escuro = tema === 'dark';
   const { status, carregando } = useStatusCache(sessao);
+
+  // Tick de 1s só pra recalcular a contagem regressiva na tela — não refaz o fetch, só
+  // reavalia "quanto falta" com base no `atualizadoEm` que já veio da API.
+  const [agora, setAgora] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div>
@@ -126,7 +147,7 @@ export default function Configuracoes() {
                       <span className={`relative inline-flex h-2 w-2 rounded-full ${status.ultimoErro ? 'bg-amber-400' : 'bg-emerald-400'}`} />
                     </span>
                     <span className={`text-xs font-medium ${status.ultimoErro ? 'text-amber-500' : 'text-emerald-500'}`}>
-                      Atualizado {formatarHaQuanto(status.atualizadoEm)}
+                      Próxima atualização {formatarFaltam(status.atualizadoEm, status.intervaloMs, agora)}
                     </span>
                   </div>
                   {status.ultimoErro && (

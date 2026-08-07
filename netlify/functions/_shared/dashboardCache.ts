@@ -82,7 +82,7 @@ function calcularJanela(): { inicio: string; fim: string } {
  * O Vercel Cron aciona a function a cada 1 minuto (o mínimo da plataforma), mas se o intervalo
  * configurado for maior, os disparos "extras" dentro dessa janela são ignorados (no-op rápido),
  * então o efeito prático é esse intervalo, não o do cron. */
-function intervaloConfiguradoMs(): number {
+export function intervaloConfiguradoMs(): number {
   const bruto = Number(process.env.DASHBOARD_CACHE_INTERVALO_MS);
   return Number.isFinite(bruto) && bruto > 0 ? bruto : 60_000;
 }
