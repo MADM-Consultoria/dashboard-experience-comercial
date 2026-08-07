@@ -143,6 +143,7 @@ export default function VisaoGeral() {
           titulo="Geral · Assinados"
           colaboradores={colaboradores}
           atual={totalAssinadosGeral}
+          meta={metaMensalGeral}
           onFechar={() => setModalAberto(null)}
         />
       )}
@@ -151,6 +152,7 @@ export default function VisaoGeral() {
           titulo="Judit · Assinados"
           colaboradores={contribuintesJudit}
           atual={totalAssinadosJudit}
+          meta={metaMensalJudit}
           onFechar={() => setModalAberto(null)}
         />
       )}

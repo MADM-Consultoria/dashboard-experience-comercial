@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
@@ -13,25 +13,43 @@ interface Props {
   titulo: string;
   colaboradores: ColaboradorReal[];
   atual: number;
+  meta: number;
   onFechar: () => void;
 }
 
 const CORES_TIME = ['#2563eb', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b6d4'];
 
+/** Meio círculo: assinados até agora em cima, % da meta embaixo — mesmo dado que já aparece
+ * no resumo do topo (card "Geral/Judit · Assinados"), só que como progresso visual em vez de
+ * texto, pra bater o olho rápido no meio dos outros gráficos do modal. */
+function GaugeProgressoMeta({ atual, meta }: { atual: number; meta: number }) {
+  const progresso = meta > 0 ? Math.min(100, (atual / meta) * 100) : 0;
+  const dados = [{ value: progresso, fill: '#2563eb' }];
+
+  return (
+    <div className="relative flex flex-col items-center">
+      <ResponsiveContainer width="100%" height={140}>
+        <RadialBarChart data={dados} startAngle={180} endAngle={0} innerRadius="75%" outerRadius="100%" barSize={14}>
+          <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#e2e8f0' }} max={100} />
+        </RadialBarChart>
+      </ResponsiveContainer>
+      <div className="absolute top-[58%] flex flex-col items-center">
+        <span className="text-2xl font-bold text-slate-900">{formatNumero(atual)}</span>
+        <span className="text-[11px] text-slate-500">{meta > 0 ? `${progresso.toFixed(0)}% da meta (${formatNumero(meta)})` : 'sem meta cadastrada'}</span>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Modal: quem realmente assinou no período, ordenado por quem mais contribuiu — soma
  * dos "Assinados" da lista bate exatamente com o total do card que foi clicado. Todos os
- * gráficos (top contribuintes, distribuição por time, funil Recebidos→Assinados→Protocolados,
+ * gráficos (progresso vs. meta, distribuição por time, funil Recebidos→Assinados→Protocolados,
  * status da equipe e taxa de protocolados dos top contribuintes) vêm da mesma lista, sem
  * inventar nenhum dado que não esteja nela.
  */
-export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }: Props) {
+export function DetalheAssinadosModal({ titulo, colaboradores, atual, meta, onFechar }: Props) {
   const contribuiram = [...colaboradores].filter((c) => c.assinados > 0).sort((a, b) => b.assinados - a.assinados);
-
-  const topContribuintes = contribuiram.slice(0, 8).map((c) => ({
-    nome: c.nome.split(' ').slice(0, 2).join(' '),
-    assinados: c.assinados,
-  }));
 
   const porTime = Array.from(
     contribuiram.reduce((mapa, c) => {
@@ -104,28 +122,14 @@ export function DetalheAssinadosModal({ titulo, colaboradores, atual, onFechar }
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-[12px] font-medium text-slate-500 mb-2">Top contribuintes</p>
-                  <div className="space-y-2">
-                    {topContribuintes.map((c) => {
-                      const maiorValor = topContribuintes[0]?.assinados || 1;
-                      const pct = Math.max(6, (c.assinados / maiorValor) * 100);
-                      return (
-                        <div key={c.nome} className="flex items-center gap-2">
-                          <span className="w-20 shrink-0 text-[11px] text-slate-500 truncate" title={c.nome}>{c.nome}</span>
-                          <div className="flex-1 h-4 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                            <div className="h-full rounded-full bg-blue-600 transition-all duration-500" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="w-6 shrink-0 text-right text-[11px] font-semibold text-slate-700 dark:text-slate-300">{formatNumero(c.assinados)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <p className="text-[12px] font-medium text-slate-500 mb-2">Progresso do mês</p>
+                  <GaugeProgressoMeta atual={atual} meta={meta} />
                 </div>
 
                 {porTime.length > 1 && (
                   <div>
                     <p className="text-[12px] font-medium text-slate-500 mb-2">Distribuição por time</p>
-                    <ResponsiveContainer width="100%" height={Math.max(140, topContribuintes.length * 28)}>
+                    <ResponsiveContainer width="100%" height={Math.max(140, porTime.length * 28)}>
                       <BarChart data={porTime} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                         <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#475569' }} tickLine={false} axisLine={false} />
