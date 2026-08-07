@@ -21,8 +21,8 @@ export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: numbe
         <span className="text-[11px] text-slate-500">Meta: <strong className="text-slate-700">{paceEsperado.toFixed(1)}</strong>/dia</span>
       </div>
 
-      {/* pt-11 (44px) deixa o corredor (52px de altura) em pé com os tênis pisando na pista */}
-      <div className="relative pt-11 pb-1">
+      {/* pt-8 (32px) deixa o corredor (40px de altura) em pé com os tênis pisando na pista */}
+      <div className="relative pt-8 pb-1">
         <div
           className="absolute transition-[left] duration-700 ease-out motion-reduce:transition-none"
           style={{ left: `${pct}%`, transform: 'translateX(-55%)', top: 0 }}

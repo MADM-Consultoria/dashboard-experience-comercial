@@ -49,7 +49,7 @@ function Braco({ cor, tras }: { cor: string; tras?: boolean }) {
 
 export function PersonagemCorredor({ cor }: { cor: string }) {
   return (
-    <svg width="44" height="52" viewBox="0 0 44 52" aria-hidden="true" style={{ overflow: 'visible' }}>
+    <svg width="34" height="40" viewBox="0 0 44 52" aria-hidden="true" style={{ overflow: 'visible' }}>
       {/* rastro de velocidade atrás do corredor */}
       <g stroke={cor} strokeWidth="1.6" strokeLinecap="round" fill="none">
         <line className="pc-vento pc-vento--1" x1="2" y1="18" x2="10" y2="18" />
