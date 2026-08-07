@@ -108,10 +108,17 @@ export default function ColaboradorDetalhe() {
     statusPace === 'critico' &&
       `Pace muito abaixo do esperado (gap de ${formatNumero(pace!.gap)} vs. meta) — no ritmo atual não fecha o mês, agir agora.`,
     statusPace === 'alerta' && `Pace abaixo do esperado (gap de ${formatNumero(pace!.gap)} vs. meta) — acompanhar de perto.`,
-    colaborador.conversaoAssinadosProtocolados < 60 && 'Revisar imediatamente a carteira de assinados sem protocolo.',
-    colaborador.atingimentoMetaMensal < 70 && 'Redefinir plano de recuperação de meta com acompanhamento semanal.',
-    colaborador.tendencia === 'caindo' && 'Agendar 1:1 de acompanhamento para entender a queda de performance.',
-    colaborador.conversaoRecebidosAssinados < 70 && 'Reforçar técnicas de fechamento comercial (etapa emissão → assinatura).',
+    colaborador.conversaoAssinadosProtocolados < 60 &&
+      `Conversão de Assinados → Protocolados em ${formatPct(colaborador.conversaoAssinadosProtocolados, 1)} (${formatNumero(colaborador.protocolados)} de ${formatNumero(colaborador.assinados)} assinados) — revisar imediatamente a carteira de assinados sem protocolo.`,
+    // Só compara com a meta se ela existir de verdade (metaMensal = 0 significa "sem meta
+    // cadastrada", não "bateu 0% da meta") — senão essa recomendação dispararia pra todo mundo.
+    colaborador.metaMensal > 0 &&
+      colaborador.atingimentoMetaMensal < 70 &&
+      `Bateu só ${formatPct(colaborador.atingimentoMetaMensal, 0)} da meta mensal (${formatNumero(colaborador.assinados)} de ${formatNumero(colaborador.metaMensal)}) — redefinir plano de recuperação com acompanhamento semanal.`,
+    colaborador.tendencia === 'caindo' &&
+      `Tendência de queda (${colaborador.produtividade.toFixed(1)} assinados/dia no período) — agendar 1:1 de acompanhamento para entender a causa.`,
+    colaborador.conversaoRecebidosAssinados < 70 &&
+      `Conversão de Recebidos → Assinados em ${formatPct(colaborador.conversaoRecebidosAssinados, 1)} (${formatNumero(colaborador.assinados)} de ${formatNumero(colaborador.recebidos)} recebidos) — reforçar técnicas de fechamento comercial.`,
   ].filter(Boolean) as string[];
 
   const recomendacaoEngajamento =
