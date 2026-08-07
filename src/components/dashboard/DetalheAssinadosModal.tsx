@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { StatusPill } from '@/components/ui/StatusPill';
@@ -24,13 +24,18 @@ const CORES_TIME = ['#2563eb', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#06b
  * texto, pra bater o olho rápido no meio dos outros gráficos do modal. */
 function GaugeProgressoMeta({ atual, meta }: { atual: number; meta: number }) {
   const progresso = meta > 0 ? Math.min(100, (atual / meta) * 100) : 0;
-  const dados = [{ value: progresso, fill: '#2563eb' }];
+  const dados = [{ value: progresso, fill: '#22c55e' }];
 
   return (
     <div className="relative flex flex-col items-center">
       <ResponsiveContainer width="100%" height={140}>
         <RadialBarChart data={dados} startAngle={180} endAngle={0} innerRadius="75%" outerRadius="100%" barSize={14}>
-          <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#e2e8f0' }} max={100} />
+          {/* Sem isso, o Recharts calcula a escala do arco com base no próprio valor plotado
+             (domínio automático) — um valor de 10 sempre preenche 100% do arco dele mesmo,
+             não 10% de uma escala fixa. Precisa fixar o domínio em [0, 100] pra o preenchimento
+             realmente refletir a porcentagem. */}
+          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+          <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#e2e8f0' }} />
         </RadialBarChart>
       </ResponsiveContainer>
       <div className="absolute top-[58%] flex flex-col items-center">

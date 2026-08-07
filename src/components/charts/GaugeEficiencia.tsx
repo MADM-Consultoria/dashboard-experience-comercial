@@ -1,4 +1,4 @@
-import { RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
+import { PolarAngleAxis, RadialBar, RadialBarChart, ResponsiveContainer } from 'recharts';
 import { STATUS_COLOR } from '@/lib/format';
 import { classificarStatus } from '@/lib/metrics';
 
@@ -18,7 +18,10 @@ export function GaugeEficiencia({ valor, label }: { valor: number; label?: strin
           outerRadius="100%"
           barSize={14}
         >
-          <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#e2e8f0' }} max={100} />
+          {/* Sem isso, o Recharts escala o arco pelo próprio valor plotado (domínio
+             automático) — preenche 100% dele mesmo, não da escala 0-100 real. */}
+          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+          <RadialBar dataKey="value" cornerRadius={8} background={{ fill: '#e2e8f0' }} />
         </RadialBarChart>
       </ResponsiveContainer>
       <div className="absolute top-[52%] -translate-y-1/2 flex flex-col items-center">
