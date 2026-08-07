@@ -150,3 +150,10 @@ export async function obterCache(): Promise<CacheCompleto> {
     meta: { atualizadoEm: '', janela: calcularJanela(), ultimoErro: 'Cache ainda não inicializado — aguardando a primeira execução do cron.' },
   };
 }
+
+/** Só a meta (sem os dados brutos) — usado pela tela de Configurações pra mostrar quando o
+ * cache foi atualizado pela última vez, sem carregar o dataset inteiro à toa. */
+export async function obterMetaCache(): Promise<MetaCache> {
+  const { meta } = await obterCache();
+  return meta;
+}
