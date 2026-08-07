@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowDown, ArrowUp, ChevronRight, Minus, Sparkles } from 'lucide-react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -181,6 +181,20 @@ export function CollaboratorCard({
   indice,
 }: CollaboratorCardProps) {
   const [aberto, setAberto] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const abertoAntesRef = useRef(aberto);
+
+  // Ao clicar em "Ver menos", o card perde altura de repente (recomendações + 3 gráficos
+  // somem) — sem isso, o navegador mantém a posição de scroll em pixels e a página "salta"
+  // pra outro ponto da grade, longe de onde a pessoa clicou. Aqui, assim que o card fecha, joga
+  // ele de volta pro topo da viewport — useLayoutEffect corrige antes do repaint, sem piscar.
+  useLayoutEffect(() => {
+    if (abertoAntesRef.current && !aberto) {
+      cardRef.current?.scrollIntoView({ block: 'nearest' });
+    }
+    abertoAntesRef.current = aberto;
+  }, [aberto]);
+
   const { banda } = calcularClassificacao(c, media);
   // Tooltip explica o que define a classificação dessa pessoa — sem expor um número de score
   // à parte que precisaria de fórmula própria pra alguém questionar.
@@ -193,6 +207,7 @@ export function CollaboratorCard({
 
   return (
     <div
+      ref={cardRef}
       className="animate-fade-in rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-5 flex flex-col gap-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_32px_-12px_rgba(15,23,42,0.18)] hover:border-slate-300 dark:hover:border-slate-600"
       style={{ animationDelay: `${Math.min(indice, 12) * 40}ms` }}
     >
