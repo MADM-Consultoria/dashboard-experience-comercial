@@ -114,18 +114,38 @@ export async function atualizarCache(): Promise<void> {
   }
 }
 
+const CHAVE_KV_TRAVA = 'dashboard-cache:trava';
+
+/** Trava distribuída no KV (SET NX + expiração): entre todas as instâncias concorrentes, só
+ * UMA consegue a trava e vai ao banco — as outras seguem com o cache que têm. É o que permite
+ * a leitura de rota disparar refresh quando o cache vence (o cron da Vercel pode rodar bem
+ * menos que 1x/min dependendo do plano) sem nunca abrir mais de 1 conexão com o Postgres.
+ * Expira sozinha em 30s, então uma instância que morrer no meio não deixa a trava presa. */
+async function adquirirTrava(): Promise<boolean> {
+  try {
+    const resultado = await kv.set(CHAVE_KV_TRAVA, Date.now(), { nx: true, ex: 30 });
+    return resultado === 'OK';
+  } catch {
+    // KV fora do ar: melhor NÃO ir ao banco (sem trava, todas as instâncias iriam juntas).
+    return false;
+  }
+}
+
+function estaVencido(): boolean {
+  if (!cacheMemoria) return true;
+  return Date.now() - new Date(cacheMemoria.meta.atualizadoEm).getTime() >= intervaloConfiguradoMs();
+}
+
 /** Só atualiza de verdade se já passou o intervalo configurado desde a última atualização bem
  * sucedida — usado pela function de cron, pra o intervalo real ficar configurável por env var
  * mesmo o Vercel Cron só permitindo agendar de 1 em 1 minuto no mínimo. */
 export async function atualizarCacheSeNecessario(): Promise<void> {
-  if (!cacheMemoria) await carregarDoKvSeVazio();
-  if (cacheMemoria && Date.now() - new Date(cacheMemoria.meta.atualizadoEm).getTime() < intervaloConfiguradoMs()) {
-    return;
-  }
-  await atualizarCache();
+  if (estaVencido()) await carregarDoKv();
+  if (!estaVencido()) return;
+  if (await adquirirTrava()) await atualizarCache();
 }
 
-async function carregarDoKvSeVazio(): Promise<void> {
+async function carregarDoKv(): Promise<void> {
   try {
     const [dados, meta] = await Promise.all([kv.get<DadosBrutos>(CHAVE_KV_DADOS), kv.get<MetaCache>(CHAVE_KV_META)]);
     if (dados && meta) cacheMemoria = { dados, meta };
@@ -134,20 +154,26 @@ async function carregarDoKvSeVazio(): Promise<void> {
   }
 }
 
-/** Usado pelas rotas do dashboard — NUNCA roda SQL, só lê. Se a instância está "fria" e não tem
- * nada em memória ainda, tenta o KV (outra instância, ou o cron, já deve ter atualizado). Se
- * mesmo assim não existir nenhum cache ainda (bem no primeiro boot da aplicação, antes do cron
- * rodar pela 1ª vez — janela de no máximo ~1 min), devolve vazio com `ultimoErro` explicando,
- * em vez de consultar o banco na hora: se toda rota fizesse isso, várias instâncias concorrentes
- * tentando popular o cache ao mesmo tempo voltaria a estourar o limite de conexões — exatamente
- * o problema que esse cache existe pra resolver. */
+/** Usado pelas rotas do dashboard. Caminho normal: devolve o cache (memória, ou KV se a
+ * instância está "fria") sem tocar o banco. Se o cache está VENCIDO (o cron da Vercel pode
+ * rodar bem menos que o agendado dependendo do plano), a leitura mesmo dispara a atualização —
+ * mas só a instância que ganhar a trava distribuída vai ao banco; as demais seguem com o
+ * último cache válido na hora (stale-while-revalidate). Assim o dado nunca envelhece além do
+ * intervalo enquanto alguém estiver usando o dashboard, e o Postgres continua vendo no máximo
+ * 1 conexão. */
 export async function obterCache(): Promise<CacheCompleto> {
-  if (cacheMemoria) return cacheMemoria;
-  await carregarDoKvSeVazio();
+  if (estaVencido()) {
+    // A memória desta instância pode só estar atrasada em relação ao KV (outra instância ou o
+    // cron pode ter atualizado) — confere o KV antes de decidir ir ao banco.
+    await carregarDoKv();
+  }
+  if (estaVencido() && (await adquirirTrava())) {
+    await atualizarCache();
+  }
   if (cacheMemoria) return cacheMemoria;
   return {
     dados: { assinados: [], leads: [], leadsJudit: [], assinadosJudit: [] },
-    meta: { atualizadoEm: '', janela: calcularJanela(), ultimoErro: 'Cache ainda não inicializado — aguardando a primeira execução do cron.' },
+    meta: { atualizadoEm: '', janela: calcularJanela(), ultimoErro: 'Cache ainda não inicializado — tente de novo em instantes.' },
   };
 }
 
