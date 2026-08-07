@@ -85,16 +85,54 @@ body {
   }
 }
 
-@keyframes correr {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-3px) rotate(3deg); }
+/* Personagem corredor (ver PersonagemCorredor.tsx) — cada articulação gira em torno de si
+ * mesma (transform-origin padrão do SVG, 0 0 do próprio grupo já posicionado no quadril/ombro).
+ * Perna e braço do MESMO lado do corpo usam o delay oposto um do outro, pra imitar o padrão
+ * real de corrida (braço direito avança junto com a perna esquerda, e vice-versa). */
+:root {
+  --pc-duracao: 0.56s;
 }
-.animate-correr {
-  animation: correr 0.5s ease-in-out infinite;
-  display: inline-block;
+
+@keyframes pcCoxa {
+  0%   { transform: rotate(34deg); }
+  25%  { transform: rotate(4deg); }
+  50%  { transform: rotate(-32deg); }
+  75%  { transform: rotate(4deg); }
+  100% { transform: rotate(34deg); }
 }
+@keyframes pcCanela {
+  0%   { transform: rotate(-8deg); }
+  20%  { transform: rotate(-72deg); }
+  50%  { transform: rotate(-4deg); }
+  75%  { transform: rotate(-48deg); }
+  100% { transform: rotate(-8deg); }
+}
+@keyframes pcBraco {
+  0%   { transform: rotate(-28deg); }
+  50%  { transform: rotate(28deg); }
+  100% { transform: rotate(-28deg); }
+}
+@keyframes pcCorpo {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.6px); }
+}
+@keyframes pcSombra {
+  0%, 100% { transform: scaleX(1); opacity: 0.14; }
+  50%      { transform: scaleX(0.8); opacity: 0.1; }
+}
+
+.pc-quadril--frente { animation: pcCoxa var(--pc-duracao) linear infinite; }
+.pc-quadril--tras   { animation: pcCoxa var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
+.pc-joelho--frente   { animation: pcCanela var(--pc-duracao) linear infinite; }
+.pc-joelho--tras     { animation: pcCanela var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
+.pc-ombro--frente    { animation: pcBraco var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
+.pc-ombro--tras      { animation: pcBraco var(--pc-duracao) linear infinite; }
+.pc-corpo            { animation: pcCorpo calc(var(--pc-duracao) / 2) ease-in-out infinite; }
+.pc-sombra           { animation: pcSombra calc(var(--pc-duracao) / 2) ease-in-out infinite; transform-origin: 17px 37px; }
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-correr {
+  .pc-quadril--frente, .pc-quadril--tras, .pc-joelho--frente, .pc-joelho--tras,
+  .pc-ombro--frente, .pc-ombro--tras, .pc-corpo, .pc-sombra {
     animation: none;
   }
 }
