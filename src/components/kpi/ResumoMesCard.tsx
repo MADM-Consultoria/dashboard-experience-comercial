@@ -11,18 +11,18 @@ interface ResumoMesCardProps {
   atual: number;
   meta: number;
   pace: PaceProjecao;
-  /** Classificação do ritmo do mês (ver classificarPace em diagnostico.ts) — decide se mostra
-   * o aviso simples ("ritmo abaixo do esperado") além dos números de pace. */
+  /** Classificação do pace do mês (ver classificarPace em diagnostico.ts) — decide se mostra
+   * o aviso simples ("pace atual abaixo do esperado") além dos números de pace. */
   statusPace: NivelStatus;
   onClick?: () => void;
 }
 
-/** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + aviso de ritmo, no estilo do resumo-mês. */
+/** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + aviso de pace, no estilo do resumo-mês. */
 export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
-  // Aviso simples só quando o ritmo está ruim — quando está bom, o card fica quieto (silêncio
+  // Aviso simples só quando o pace está ruim — quando está bom, o card fica quieto (silêncio
   // já é a informação: nada pra ajustar).
-  const ritmoRuim = statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico';
+  const paceRuim = statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico';
 
   return (
     <Card
@@ -70,10 +70,10 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
         </div>
       </div>
 
-      {ritmoRuim && (
+      {paceRuim && (
         <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-amber-700">
           <AlertTriangle size={13} className="shrink-0 text-amber-500" />
-          Ritmo abaixo do necessário pra bater a meta esse mês.
+          Pace atual abaixo do pace esperado pra bater a meta esse mês.
         </p>
       )}
     </Card>
