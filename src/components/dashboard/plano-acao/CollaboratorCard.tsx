@@ -219,10 +219,26 @@ export function CollaboratorCard({
       {aberto && (
         <div className="flex flex-col gap-4 animate-fade-in">
           {recomendacoes.length > 0 && (
-            <p className="flex items-start gap-1.5 text-[12px] text-slate-600 dark:text-slate-300 leading-snug rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 p-3">
-              <Sparkles size={12} className="text-blue-500 mt-0.5 shrink-0" />
-              {recomendacoes[0]}
-            </p>
+            <div className="rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 p-3">
+              <p className="flex items-start gap-1.5 text-[12px] text-slate-600 dark:text-slate-300 leading-snug">
+                <Sparkles size={12} className="text-blue-500 mt-0.5 shrink-0" />
+                {recomendacoes[0]}
+              </p>
+              {/* Outras recomendações que também se aplicam ao mesmo colaborador — não são
+                 alternativas nem repetição, cada uma vem de um número real diferente (ex:
+                 conversão baixa E ritmo abaixo da média ao mesmo tempo). Complementam a
+                 primeira em vez de competir com ela por atenção. */}
+              {recomendacoes.length > 1 && (
+                <ul className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 space-y-1.5">
+                  {recomendacoes.slice(1).map((rec, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                      <span className="mt-1 h-1 w-1 rounded-full bg-slate-400 shrink-0" />
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           <BlocoMetricaMensal
