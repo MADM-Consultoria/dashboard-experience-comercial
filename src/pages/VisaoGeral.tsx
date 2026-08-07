@@ -10,7 +10,7 @@ import { AlertCard } from '@/components/alerts/AlertCard';
 import { PlanoAcaoColaboradores } from '@/components/dashboard/PlanoAcaoColaboradores';
 import { DetalheAssinadosModal } from '@/components/dashboard/DetalheAssinadosModal';
 import { useIntelligence } from '@/lib/useIntelligence';
-import { calcularPaceProjecao } from '@/lib/diagnostico';
+import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
 import { contarDiasUteis, getPeriodoMesDoCalendario } from '@/lib/period';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { formatNumero, formatPct } from '@/lib/format';
@@ -66,6 +66,8 @@ export default function VisaoGeral() {
 
   const paceEquipe = calcularPaceProjecao(totalAssinadosGeral, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(totalAssinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
+  const statusPaceEquipe = classificarPace(paceEquipe, metaMensalGeral);
+  const statusPaceJudit = classificarPace(paceJudit, metaMensalJudit);
 
   // Resumo do período selecionado no calendário do topo.
   // "Conversão Geral" é a conversão da empresa inteira (todo mundo, Judit incluso). "Conversão
@@ -121,7 +123,7 @@ export default function VisaoGeral() {
           icon={FileSignature}
           atual={totalAssinadosGeral}
           meta={metaMensalGeral}
-          pace={paceEquipe}
+          statusPace={statusPaceEquipe}
           onClick={() => setModalAberto('geral')}
         />
         <ResumoMesCard
@@ -129,7 +131,7 @@ export default function VisaoGeral() {
           icon={FileSignature}
           atual={totalAssinadosJudit}
           meta={metaMensalJudit}
-          pace={paceJudit}
+          statusPace={statusPaceJudit}
           onClick={() => setModalAberto('judit')}
         />
       </div>

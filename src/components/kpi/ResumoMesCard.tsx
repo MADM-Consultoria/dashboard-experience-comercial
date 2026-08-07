@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import type { PaceProjecao } from '@/types/domain';
+import type { NivelStatus } from '@/types/domain';
 import { formatNumero } from '@/lib/format';
 
 interface ResumoMesCardProps {
@@ -9,13 +10,19 @@ interface ResumoMesCardProps {
   icon: LucideIcon | string;
   atual: number;
   meta: number;
-  pace: PaceProjecao;
+  /** Classificação do ritmo do mês (ver classificarPace em diagnostico.ts) — só usada aqui pra
+   * decidir se mostra um aviso simples ("ritmo abaixo do esperado"), sem expor os números de
+   * pace/projeção calculados por trás. Menos número exposto = menos coisa pra explicar/validar. */
+  statusPace: NivelStatus;
   onClick?: () => void;
 }
 
-/** Card executivo "Geral/Judit · Assinados": progresso do mês + pace, no estilo do resumo-mês. */
-export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, onClick }: ResumoMesCardProps) {
+/** Card executivo "Geral/Judit · Assinados": progresso do mês + aviso de ritmo, no estilo do resumo-mês. */
+export function ResumoMesCard({ titulo, icon: Icon, atual, meta, statusPace, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
+  // Aviso simples só quando o ritmo está ruim — quando está bom, o card fica quieto (silêncio
+  // já é a informação: nada pra ajustar). Sem número de pace/gap/projeção exposto.
+  const ritmoRuim = statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico';
 
   return (
     <Card
@@ -52,16 +59,12 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, onClick }
         <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace esperado</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
-        </div>
-      </div>
+      {ritmoRuim && (
+        <p className="flex items-center gap-1.5 pt-3 border-t border-slate-100 text-[12px] text-amber-700">
+          <AlertTriangle size={13} className="shrink-0 text-amber-500" />
+          Ritmo abaixo do necessário pra bater a meta esse mês.
+        </p>
+      )}
     </Card>
   );
 }

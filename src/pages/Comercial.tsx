@@ -4,7 +4,7 @@ import { MetaAtingimentoChart, TaxaProtocoladosChart, RankingProdutividadeLollip
 import { KpiCard } from '@/components/kpi/KpiCard';
 import { ResumoMesCard } from '@/components/kpi/ResumoMesCard';
 import { useIntelligence } from '@/lib/useIntelligence';
-import { calcularPaceProjecao } from '@/lib/diagnostico';
+import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
 import { formatNumero, formatPct } from '@/lib/format';
 import { Activity, FileStack, Gauge, TrendingUp } from 'lucide-react';
 
@@ -23,6 +23,8 @@ export default function Comercial() {
 
   const paceEquipe = calcularPaceProjecao(kpi.totalAssinados, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(assinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
+  const statusPaceEquipe = classificarPace(paceEquipe, metaMensalGeral);
+  const statusPaceJudit = classificarPace(paceJudit, metaMensalJudit);
 
   if (loading) {
     return (
@@ -47,10 +49,10 @@ export default function Comercial() {
 
       <div className="grid grid-cols-1 xl:grid-cols-6 gap-4 mb-6">
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={metaMensalGeral} pace={paceEquipe} />
+          <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={metaMensalGeral} statusPace={statusPaceEquipe} />
         </div>
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} />
+          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} statusPace={statusPaceJudit} />
         </div>
         <div className="xl:col-span-2 grid grid-cols-2 gap-4">
           <KpiCard titulo="Recebidos no período" valor={formatNumero(kpi.totalRecebidos)} icon={FileStack} accent="info" />
