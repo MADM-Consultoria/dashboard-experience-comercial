@@ -184,17 +184,17 @@ function complementoZerouBandaBoa(c: ColaboradorReal, media: MediaEquipe): strin
     return ' Também não protocolou nada esse mês — vale conferir os dois pontos na mesma conversa.';
   }
   if (c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5) {
-    return ` A conversão geral também está baixa (${formatPct(c.conversaoRecebidosAssinados, 1)}), então talvez não seja só uma pausa.`;
+    return ` A conversão geral também está baixa (${formatPct(c.conversaoRecebidosAssinados, 1)}), então talvez não seja só uma interrupção pontual.`;
   }
   if (c.conversaoRecebidosAssinados > 20) {
-    return ` A conversão geral segue alta (${formatPct(c.conversaoRecebidosAssinados, 1)}), o que reforça que deve ser mesmo só uma pausa pontual.`;
+    return ` A conversão geral segue alta (${formatPct(c.conversaoRecebidosAssinados, 1)}), o que reforça que deve ser mesmo só uma interrupção pontual.`;
   }
   if (media.recebidos > 0 && c.recebidos < media.recebidos * 0.5) {
     return ` Também recebeu poucos leads esse mês (${formatNumero(c.recebidos)}, bem abaixo da média da equipe) — pode ser parte da explicação.`;
   }
   return escolherPor(c.id, [
-    ' Vale só confirmar se é pausa pontual (férias, mudança de carteira) antes de virar uma queda de verdade.',
-    ' Sem nenhum outro número fora do lugar — provavelmente é só uma pausa; uma conversa rápida já tira a dúvida.',
+    ' Vale só confirmar se é uma interrupção pontual (férias, mudança de carteira) antes de virar uma queda de verdade.',
+    ' Sem nenhum outro número fora do lugar — provavelmente é só uma interrupção pontual; uma conversa rápida já tira a dúvida.',
     ' O resto dos números segue normal, então é mais provável que seja algo pontual do que uma queda real.',
   ]);
 }
@@ -255,7 +255,7 @@ export function gerarRecomendacoesIA(
 
     let mensagem: string;
     if (zerou && bandaBoa) {
-      // Classificação ainda boa mas zerou de vez — provavelmente pausa pontual (férias, licença,
+      // Classificação ainda boa mas zerou de vez — provavelmente interrupção pontual (férias, licença,
       // trocou de carteira), não desempenho ruim. O complemento busca algo real que distinga
       // esse caso do de outra pessoa na mesma situação, em vez de repetir a mesma frase.
       mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas a classificação ainda está em ${BANDA_LABEL[banda].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
