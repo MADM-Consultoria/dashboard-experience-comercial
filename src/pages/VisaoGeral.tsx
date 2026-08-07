@@ -123,6 +123,7 @@ export default function VisaoGeral() {
           icon={FileSignature}
           atual={totalAssinadosGeral}
           meta={metaMensalGeral}
+          pace={paceEquipe}
           statusPace={statusPaceEquipe}
           onClick={() => setModalAberto('geral')}
         />
@@ -131,6 +132,7 @@ export default function VisaoGeral() {
           icon={FileSignature}
           atual={totalAssinadosJudit}
           meta={metaMensalJudit}
+          pace={paceJudit}
           statusPace={statusPaceJudit}
           onClick={() => setModalAberto('judit')}
         />
