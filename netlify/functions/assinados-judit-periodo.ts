@@ -1,14 +1,13 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { assinadosJuditPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Assinados do canal Judit no período — definição oficial passada pela operação:
- * lead trabalhado por um SDR "Judit" (madm.kommo_leads.sdr), qualificado E assinado
- * dentro do mesmo período. Diferente do "canal" por colaborador usado no resto do
- * app (Classificação Operacional), que é só uma aproximação.
- * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * Assinados do canal Judit no período — definição oficial: lead trabalhado por um SDR "Judit"
+ * (madm.kommo_leads.sdr), qualificado E assinado dentro do mesmo período. A partir do cache
+ * central do dashboard — não consulta o Postgres diretamente.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -27,37 +26,17 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const [totalResult, porConsultorResult] = await Promise.all([
-      getPool().query(
-        `select count(distinct e.id_kommo)::int as total
-           from madm.emitidos_e_assinados e
-           join madm.kommo_leads k on k.id = e.id_kommo::bigint
-          where k.data_qualificacao between $1 and $2
-            and e.data_assinatura between $1 and $2
-            and k.sdr = 'Judit'`,
-        [inicio, fim],
-      ),
-      getPool().query(
-        `select e.consultor_responsavel_assinatura as consultor, count(distinct e.id_kommo)::int as total
-           from madm.emitidos_e_assinados e
-           join madm.kommo_leads k on k.id = e.id_kommo::bigint
-          where k.data_qualificacao between $1 and $2
-            and e.data_assinatura between $1 and $2
-            and k.sdr = 'Judit'
-          group by 1`,
-        [inicio, fim],
-      ),
-    ]);
-    const porConsultor = filtrarPorTimeConsultor(porConsultorResult.rows, sessao.time);
-    // Restrito a um time: o total não pode vir da consulta bruta (empresa inteira) — some só
+    const { dados } = await obterCache();
+    const linhas = assinadosJuditPorConsultor(dados, inicio, fim);
+    const porConsultor = filtrarPorTimeConsultor(linhas, sessao.time);
+    // Restrito a um time: o total não pode vir da contagem bruta (empresa inteira) — some só
     // as linhas do time depois de filtradas, senão o card de total vazaria o número da empresa.
-    const total = sessao.time ? porConsultor.reduce((a, r) => a + (Number(r.total) || 0), 0) : totalResult.rows[0]?.total ?? 0;
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ ok: true, total, porConsultor }),
-    };
+    const total = sessao.time
+      ? porConsultor.reduce((a, r) => a + r.total, 0)
+      : linhas.reduce((a, r) => a + r.total, 0);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, total, porConsultor }) };
   } catch (err) {
-    console.error('Falha ao consultar assinados Judit (sdr):', err);
+    console.error('Falha ao ler cache de assinados Judit:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

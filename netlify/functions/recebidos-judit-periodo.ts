@@ -1,15 +1,14 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { recebidosJuditPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Recebidos (leads qualificados) do canal Judit no período — mesma definição oficial
- * usada em assinados-judit-periodo: lead trabalhado por um SDR "Judit"
- * (madm.kommo_leads.sdr), qualificado dentro do período (data_qualificacao). Substitui de
- * vez a "Conversão Judit" antiga que vinha pronta de madm.view_relatorio_judit (relatório
- * mensal estático) — agora Recebidos e Assinados Judit vêm da mesma fonte real.
- * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * Recebidos (leads qualificados) do canal Judit no período — mesma definição oficial usada em
+ * assinados-judit-periodo: lead trabalhado por um SDR "Judit" (madm.kommo_leads.sdr),
+ * qualificado dentro do período. A partir do cache central do dashboard — não consulta o
+ * Postgres diretamente.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -28,31 +27,15 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const [totalResult, porConsultorResult] = await Promise.all([
-      getPool().query(
-        `select count(*)::int as total
-           from madm.kommo_leads
-          where data_qualificacao between $1 and $2
-            and sdr = 'Judit'`,
-        [inicio, fim],
-      ),
-      getPool().query(
-        `select lead_usuario_responsavel as consultor, count(*)::int as total
-           from madm.kommo_leads
-          where data_qualificacao between $1 and $2
-            and sdr = 'Judit'
-          group by 1`,
-        [inicio, fim],
-      ),
-    ]);
-    const porConsultor = filtrarPorTimeConsultor(porConsultorResult.rows, sessao.time);
-    const total = sessao.time ? porConsultor.reduce((a, r) => a + (Number(r.total) || 0), 0) : totalResult.rows[0]?.total ?? 0;
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ ok: true, total, porConsultor }),
-    };
+    const { dados } = await obterCache();
+    const linhas = recebidosJuditPorConsultor(dados, inicio, fim);
+    const porConsultor = filtrarPorTimeConsultor(linhas, sessao.time);
+    const total = sessao.time
+      ? porConsultor.reduce((a, r) => a + r.total, 0)
+      : linhas.reduce((a, r) => a + r.total, 0);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, total, porConsultor }) };
   } catch (err) {
-    console.error('Falha ao consultar recebidos Judit (sdr):', err);
+    console.error('Falha ao ler cache de recebidos Judit:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

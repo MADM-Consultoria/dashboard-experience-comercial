@@ -1,34 +1,15 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { vendaGanhaPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Expõe a contagem de venda ganha por consultor em um período, a partir de
- * `madm.view_app_kommo_leads` — venda ganha é contada pela data de ganho
- * (`data_ganho`), restrita aos funis de auditoria de ganho/PRO e às etapas do
- * funil que a operação considera parte do fluxo de venda ganha (definição
- * passada pela operação via SELECT em madm.kommo_leads). Uma linha por lead.
- * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * Expõe a contagem de venda ganha por consultor em um período, a partir do cache central do
+ * dashboard — não consulta o Postgres diretamente. Mesma definição de sempre
+ * (madm.view_app_kommo_leads, por `data_ganho`, funis/etapas do fluxo de venda ganha — ver
+ * `_shared/dashboardAgregacoes.ts`), agregada em memória.
  */
-const FUNIS_VENDA_GANHA = ['JURIDICO AUDITORIA DE GANHO', 'AUDITORIA DE GANHO', 'PRO'];
-const ETAPAS_VENDA_GANHA = [
-  'AG PROTOCOLO',
-  'PROTOCOLADO',
-  'Venda ganha',
-  'AG PRONTUÁRIO',
-  'ENTRADA',
-  'Coleta dados Hospital',
-  'E-MAIL NÃO RESPONDIDO',
-  'E-MAIL RESPONDIDO',
-  'AÇÃO DO CLIENTE',
-  'ASSINATURA DO ADV',
-  'PENDÊNCIA PRO',
-  'VALIDAÇÃO SUPERVISOR',
-  'FINALIZADO',
-  'ANALISE DE PRONTUÁRIO',
-];
-
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
     return { statusCode: 405, body: JSON.stringify({ ok: false, error: 'Method not allowed' }) };
@@ -46,19 +27,12 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const resultado = await getPool().query(
-      `select lead_usuario_responsavel as consultor, count(*)::int as total
-         from madm.view_app_kommo_leads
-        where data_ganho between $1 and $2
-          and funil_vendas = any($3)
-          and etapa_lead = any($4)
-        group by 1`,
-      [inicio, fim, FUNIS_VENDA_GANHA, ETAPAS_VENDA_GANHA],
-    );
-    const dados = filtrarPorTimeConsultor(resultado.rows, sessao.time);
-    return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
+    const { dados } = await obterCache();
+    const linhas = vendaGanhaPorConsultor(dados, inicio, fim);
+    const filtradas = filtrarPorTimeConsultor(linhas, sessao.time);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, dados: filtradas }) };
   } catch (err) {
-    console.error('Falha ao consultar view_app_kommo_leads (venda ganha):', err);
+    console.error('Falha ao ler cache de venda ganha:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

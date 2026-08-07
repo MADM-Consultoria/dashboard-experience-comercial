@@ -1,13 +1,13 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { recebidosPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Expõe a contagem de recebidos (leads qualificados) por consultor em um
- * período, a partir de `madm.view_app_kommo_leads` — recebidos são contados
- * pela data de qualificação (`data_qualificacao`), uma linha por lead.
- * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * Expõe a contagem de recebidos (leads qualificados) por consultor em um período, a partir do
+ * cache central do dashboard — não consulta o Postgres diretamente. Mesma definição de sempre
+ * (madm.view_app_kommo_leads, por `data_qualificacao`), agregada em memória.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -26,17 +26,12 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const resultado = await getPool().query(
-      `select lead_usuario_responsavel as consultor, count(*)::int as total
-         from madm.view_app_kommo_leads
-        where data_qualificacao between $1 and $2
-        group by 1`,
-      [inicio, fim],
-    );
-    const dados = filtrarPorTimeConsultor(resultado.rows, sessao.time);
-    return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
+    const { dados } = await obterCache();
+    const linhas = recebidosPorConsultor(dados, inicio, fim);
+    const filtradas = filtrarPorTimeConsultor(linhas, sessao.time);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, dados: filtradas }) };
   } catch (err) {
-    console.error('Falha ao consultar view_app_kommo_leads:', err);
+    console.error('Falha ao ler cache de recebidos:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

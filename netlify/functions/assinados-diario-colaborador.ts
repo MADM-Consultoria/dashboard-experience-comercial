@@ -1,14 +1,15 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { assinadosDiarioPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Expõe a contagem de assinados por dia e por consultor (consultor_responsavel_assinatura),
- * a partir de `madm.view_app_emitidos_e_assinados` — alimenta o gráfico de evolução mensal
- * do colaborador em ColaboradorDetalhe. Vem por consultor (não filtrado por nome aqui) porque
- * o casamento de nome com acentuação/variação é feito no cliente, igual ao resto do app.
- * Somente leitura — nenhum outro comando SQL além do SELECT abaixo.
+ * Expõe a contagem de assinados por dia e por consultor, a partir do cache central do
+ * dashboard — não consulta o Postgres diretamente. Alimenta o gráfico de evolução mensal do
+ * colaborador em ColaboradorDetalhe e as sparklines do Plano de Ação. Vem por consultor (não
+ * filtrado por nome aqui) porque o casamento de nome com acentuação/variação é feito no
+ * cliente, igual ao resto do app.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -27,20 +28,12 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const resultado = await getPool().query(
-      `select data_assinatura::date as dia, consultor_responsavel_assinatura as consultor, count(*)::int as total
-         from madm.view_app_emitidos_e_assinados
-        where status ilike 'signed'
-          and produto ilike 'auxilio acidente'
-          and data_assinatura between $1 and $2
-        group by 1, 2
-        order by 1`,
-      [inicio, fim],
-    );
-    const dados = filtrarPorTimeConsultor(resultado.rows, sessao.time);
-    return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
+    const { dados } = await obterCache();
+    const linhas = assinadosDiarioPorConsultor(dados, inicio, fim);
+    const filtradas = filtrarPorTimeConsultor(linhas, sessao.time);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, dados: filtradas }) };
   } catch (err) {
-    console.error('Falha ao consultar view_app_emitidos_e_assinados (diário por colaborador):', err);
+    console.error('Falha ao ler cache de assinados diário por colaborador:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

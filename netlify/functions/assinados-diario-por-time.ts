@@ -1,12 +1,11 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { assinadosDiarioPorTime } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Expõe a contagem de assinados por dia e por time (equipe_responsavel_assinatura),
- * a partir de `madm.view_app_emitidos_e_assinados` — alimenta o gráfico de
- * evolução das equipes em Equipe. Somente leitura — nenhum outro comando SQL
- * além do SELECT abaixo.
+ * Expõe a contagem de assinados por dia e por time, a partir do cache central do dashboard —
+ * não consulta o Postgres diretamente. Alimenta o gráfico de evolução das equipes em Equipe.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -25,21 +24,13 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const resultado = await getPool().query(
-      `select data_assinatura::date as dia, equipe_responsavel_assinatura as equipe, count(*)::int as total
-         from madm.view_app_emitidos_e_assinados
-        where status ilike 'signed'
-          and produto ilike 'auxilio acidente'
-          and data_assinatura between $1 and $2
-        group by 1, 2
-        order by 1`,
-      [inicio, fim],
-    );
+    const { dados } = await obterCache();
+    const linhas = assinadosDiarioPorTime(dados, inicio, fim);
     // Já tem o nome do time na linha — restringe direto, sem precisar do mapa consultor→time.
-    const dados = sessao.time ? resultado.rows.filter((r) => r.equipe === sessao.time) : resultado.rows;
-    return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
+    const filtradas = sessao.time ? linhas.filter((r) => r.equipe === sessao.time) : linhas;
+    return { statusCode: 200, body: JSON.stringify({ ok: true, dados: filtradas }) };
   } catch (err) {
-    console.error('Falha ao consultar view_app_emitidos_e_assinados (diário por time):', err);
+    console.error('Falha ao ler cache de assinados diário por time:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };

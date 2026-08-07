@@ -1,14 +1,13 @@
 import type { Handler } from '@netlify/functions';
-import { getPool } from './_shared/db.js';
 import { extrairToken, validarToken } from './_shared/auth.js';
 import { filtrarPorTimeConsultor } from './_shared/timesEquipe.js';
+import { obterCache } from './_shared/dashboardCache.js';
+import { protocoladosDiarioPorConsultor } from './_shared/dashboardAgregacoes.js';
 
 /**
- * Expõe a contagem de protocolados por dia e por consultor (lead_usuario_responsavel), a
- * partir de `madm.view_app_kommo_leads` — mesma definição de protocolados-periodo.ts (data de
- * ganho, funil "JURIDICO AUDITORIA DE GANHO", etapa "PROTOCOLADO"), só que agrupado por dia
- * também, pro ritmo diário do Plano de Ação. Somente leitura — nenhum outro comando SQL além
- * do SELECT abaixo.
+ * Expõe a contagem de protocolados por dia e por consultor, a partir do cache central do
+ * dashboard — não consulta o Postgres diretamente. Mesma definição de protocolados-periodo.ts,
+ * só que agrupado por dia também, pro ritmo diário do Plano de Ação.
  */
 export const handler: Handler = async (event) => {
   if (event.httpMethod !== 'GET') {
@@ -27,20 +26,12 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const resultado = await getPool().query(
-      `select data_ganho::date as dia, lead_usuario_responsavel as consultor, count(*)::int as total
-         from madm.view_app_kommo_leads
-        where data_ganho between $1 and $2
-          and funil_vendas = 'JURIDICO AUDITORIA DE GANHO'
-          and etapa_lead = 'PROTOCOLADO'
-        group by 1, 2
-        order by 1`,
-      [inicio, fim],
-    );
-    const dados = filtrarPorTimeConsultor(resultado.rows, sessao.time);
-    return { statusCode: 200, body: JSON.stringify({ ok: true, dados }) };
+    const { dados } = await obterCache();
+    const linhas = protocoladosDiarioPorConsultor(dados, inicio, fim);
+    const filtradas = filtrarPorTimeConsultor(linhas, sessao.time);
+    return { statusCode: 200, body: JSON.stringify({ ok: true, dados: filtradas }) };
   } catch (err) {
-    console.error('Falha ao consultar view_app_kommo_leads (protocolados diário por colaborador):', err);
+    console.error('Falha ao ler cache de protocolados diário por colaborador:', err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: 'Não foi possível carregar os dados agora.' }) };
   }
 };
