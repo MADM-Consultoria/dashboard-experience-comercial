@@ -21,11 +21,11 @@ export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: numbe
         <span className="text-[11px] text-slate-500">Meta: <strong className="text-slate-700">{paceEsperado.toFixed(1)}</strong>/dia</span>
       </div>
 
-      {/* pt-8 dá espaço pro corredor ficar em pé acima da pista sem cortar a cabeça/braços */}
-      <div className="relative pt-8 pb-1">
+      {/* pt-11 (44px) deixa o corredor (52px de altura) em pé com os tênis pisando na pista */}
+      <div className="relative pt-11 pb-1">
         <div
           className="absolute transition-[left] duration-700 ease-out motion-reduce:transition-none"
-          style={{ left: `${pct}%`, transform: 'translateX(-62%)', top: 0 }}
+          style={{ left: `${pct}%`, transform: 'translateX(-55%)', top: 0 }}
         >
           <PersonagemCorredor cor={cor} />
         </div>
@@ -37,9 +37,20 @@ export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: numbe
           />
         </div>
 
-        <span className="absolute -right-1 -top-0.5 text-sm leading-none" title={`Meta: ${paceEsperado.toFixed(1)}/dia`}>
-          🏁
-        </span>
+        {/* bandeira de chegada em SVG (sem emoji), plantada logo acima do fim da pista */}
+        <svg
+          width="14"
+          height="20"
+          viewBox="0 0 14 20"
+          className="absolute -right-1 bottom-2"
+          aria-hidden="true"
+        >
+          <title>{`Meta: ${paceEsperado.toFixed(1)}/dia`}</title>
+          <line x1="2" y1="1" x2="2" y2="19" stroke="#64748b" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M 3 1.5 L 13 3.5 L 3 8 Z" fill="#1e293b" />
+          <rect x="3.6" y="2.4" width="2.2" height="2.2" fill="#f8fafc" opacity="0.9" />
+          <rect x="7" y="3.4" width="2.2" height="2.2" fill="#f8fafc" opacity="0.9" />
+        </svg>
       </div>
     </div>
   );

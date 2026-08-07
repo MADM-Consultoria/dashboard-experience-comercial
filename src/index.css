@@ -86,55 +86,73 @@ body {
 }
 
 /* Personagem corredor (ver PersonagemCorredor.tsx) — cada articulação gira em torno de si
- * mesma (transform-origin padrão do SVG, 0 0 do próprio grupo já posicionado no quadril/ombro).
- * Perna e braço do MESMO lado do corpo usam o delay oposto um do outro, pra imitar o padrão
- * real de corrida (braço direito avança junto com a perna esquerda, e vice-versa). */
+ * mesma (transform-origin 0 0 do próprio grupo, já posicionado no quadril/joelho/ombro pelo
+ * atributo transform do SVG). As pernas/braços são desenhados retos pra baixo — é a rotação
+ * que faz o balanço. Em coordenadas SVG, rotação positiva = sentido horário = membro vai pra
+ * TRÁS (esquerda); negativa = pra FRENTE (direita). Perna e braço do MESMO lado do corpo usam
+ * delays opostos, imitando o padrão real de corrida (braço direito avança com a perna
+ * esquerda, e vice-versa). */
 :root {
-  --pc-duracao: 0.56s;
+  --pc-duracao: 0.55s;
 }
 
+/* Coxa: balança da frente (-40°) pra trás (+34°). */
 @keyframes pcCoxa {
-  0%   { transform: rotate(34deg); }
-  25%  { transform: rotate(4deg); }
-  50%  { transform: rotate(-32deg); }
-  75%  { transform: rotate(4deg); }
-  100% { transform: rotate(34deg); }
+  0%   { transform: rotate(-40deg); }
+  50%  { transform: rotate(34deg); }
+  100% { transform: rotate(-40deg); }
 }
+/* Canela: quase esticada no apoio/impulso, bem dobrada (calcanhar sobe) na recuperação —
+ * o pico da dobra acontece enquanto a coxa volta pra frente (75% do ciclo da coxa). */
 @keyframes pcCanela {
-  0%   { transform: rotate(-8deg); }
-  20%  { transform: rotate(-72deg); }
-  50%  { transform: rotate(-4deg); }
-  75%  { transform: rotate(-48deg); }
-  100% { transform: rotate(-8deg); }
+  0%   { transform: rotate(10deg); }
+  35%  { transform: rotate(30deg); }
+  55%  { transform: rotate(52deg); }
+  78%  { transform: rotate(88deg); }
+  100% { transform: rotate(10deg); }
 }
+/* Braço: dobrado fixo no cotovelo (desenho), balançando do ombro em contra-fase à perna. */
 @keyframes pcBraco {
-  0%   { transform: rotate(-28deg); }
-  50%  { transform: rotate(28deg); }
-  100% { transform: rotate(-28deg); }
+  0%   { transform: rotate(-30deg); }
+  50%  { transform: rotate(26deg); }
+  100% { transform: rotate(-30deg); }
 }
+/* Bounce vertical do corpo — 2 apoios por ciclo, então metade da duração. */
 @keyframes pcCorpo {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-1.6px); }
+  50%      { transform: translateY(-1.8px); }
 }
 @keyframes pcSombra {
-  0%, 100% { transform: scaleX(1); opacity: 0.14; }
-  50%      { transform: scaleX(0.8); opacity: 0.1; }
+  0%, 100% { transform: scaleX(1); opacity: 0.15; }
+  50%      { transform: scaleX(0.78); opacity: 0.1; }
+}
+/* Rastro de velocidade: risquinhos surgem perto do corpo e escapam pra trás sumindo. */
+@keyframes pcVento {
+  0%   { opacity: 0; transform: translateX(5px); }
+  30%  { opacity: 0.55; }
+  100% { opacity: 0; transform: translateX(-7px); }
 }
 
-.pc-quadril--frente { animation: pcCoxa var(--pc-duracao) linear infinite; }
-.pc-quadril--tras   { animation: pcCoxa var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
+.pc-quadril--frente { animation: pcCoxa var(--pc-duracao) ease-in-out infinite; }
+.pc-quadril--tras   { animation: pcCoxa var(--pc-duracao) ease-in-out infinite; animation-delay: calc(var(--pc-duracao) / -2); }
 .pc-joelho--frente   { animation: pcCanela var(--pc-duracao) linear infinite; }
 .pc-joelho--tras     { animation: pcCanela var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
-.pc-ombro--frente    { animation: pcBraco var(--pc-duracao) linear infinite; animation-delay: calc(var(--pc-duracao) / -2); }
-.pc-ombro--tras      { animation: pcBraco var(--pc-duracao) linear infinite; }
+.pc-ombro--frente    { animation: pcBraco var(--pc-duracao) ease-in-out infinite; animation-delay: calc(var(--pc-duracao) / -2); }
+.pc-ombro--tras      { animation: pcBraco var(--pc-duracao) ease-in-out infinite; }
 .pc-corpo            { animation: pcCorpo calc(var(--pc-duracao) / 2) ease-in-out infinite; }
-.pc-sombra           { animation: pcSombra calc(var(--pc-duracao) / 2) ease-in-out infinite; transform-origin: 17px 37px; }
+.pc-sombra           { animation: pcSombra calc(var(--pc-duracao) / 2) ease-in-out infinite; transform-origin: 22px 49px; }
+.pc-vento--1         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; }
+.pc-vento--2         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -3); }
+.pc-vento--3         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -1.6); }
 
 @media (prefers-reduced-motion: reduce) {
   .pc-quadril--frente, .pc-quadril--tras, .pc-joelho--frente, .pc-joelho--tras,
-  .pc-ombro--frente, .pc-ombro--tras, .pc-corpo, .pc-sombra {
+  .pc-ombro--frente, .pc-ombro--tras, .pc-corpo, .pc-sombra,
+  .pc-vento--1, .pc-vento--2, .pc-vento--3 {
     animation: none;
   }
+  /* Sem animação, os risquinhos de vento ficariam parados no ar — some com eles. */
+  .pc-vento { opacity: 0; }
 }
 
 /* Correção geral do modo escuro: a maioria dos componentes usa classes fixas
