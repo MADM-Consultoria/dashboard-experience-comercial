@@ -182,17 +182,28 @@ export function CollaboratorCard({
 }: CollaboratorCardProps) {
   const [aberto, setAberto] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const abertoAntesRef = useRef(aberto);
+  const topAntesDeFecharRef = useRef<number | null>(null);
 
   // Ao clicar em "Ver menos", o card perde altura de repente (recomendações + 3 gráficos
-  // somem) — sem isso, o navegador mantém a posição de scroll em pixels e a página "salta"
-  // pra outro ponto da grade, longe de onde a pessoa clicou. Aqui, assim que o card fecha, joga
-  // ele de volta pro topo da viewport — useLayoutEffect corrige antes do repaint, sem piscar.
-  useLayoutEffect(() => {
-    if (abertoAntesRef.current && !aberto) {
-      cardRef.current?.scrollIntoView({ block: 'nearest' });
+  // somem) — o navegador mantém a posição de scroll em pixels, então a página "salta" pra
+  // outro ponto da grade, longe de onde a pessoa clicou (scrollIntoView sozinho não resolvia
+  // direito, porque só garante que o card fique visível em algum lugar, não que fique exatamente
+  // onde estava). Aqui guarda a posição exata do topo do card na tela um instante antes de
+  // fechar, e depois que o layout se ajusta, rola de volta a diferença exata — o card fica
+  // pixel a pixel no mesmo lugar em que a pessoa clicou.
+  function alternarAberto() {
+    if (aberto) {
+      topAntesDeFecharRef.current = cardRef.current?.getBoundingClientRect().top ?? null;
     }
-    abertoAntesRef.current = aberto;
+    setAberto((v) => !v);
+  }
+
+  useLayoutEffect(() => {
+    if (!aberto && topAntesDeFecharRef.current !== null) {
+      const topDepois = cardRef.current?.getBoundingClientRect().top ?? topAntesDeFecharRef.current;
+      window.scrollBy(0, topDepois - topAntesDeFecharRef.current);
+      topAntesDeFecharRef.current = null;
+    }
   }, [aberto]);
 
   const { banda } = calcularClassificacao(c, media);
@@ -299,7 +310,7 @@ export function CollaboratorCard({
         </div>
       )}
 
-      <QuickActions aberto={aberto} onToggle={() => setAberto((v) => !v)} />
+      <QuickActions aberto={aberto} onToggle={alternarAberto} />
     </div>
   );
 }
