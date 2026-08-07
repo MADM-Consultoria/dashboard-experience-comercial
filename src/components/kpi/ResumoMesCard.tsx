@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
+import { BarraCorridaPace } from './BarraCorridaPace';
 import type { NivelStatus, PaceProjecao } from '@/types/domain';
 import { formatNumero } from '@/lib/format';
 
@@ -59,16 +60,7 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
         <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace atual/dia</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceAtual.toFixed(1)}</p>
-        </div>
-        <div>
-          <p className="text-[11px] text-slate-500 mb-0.5">Pace esperado</p>
-          <p className="text-sm font-semibold text-slate-900">{pace.paceEsperado.toFixed(1)}</p>
-        </div>
-      </div>
+      <BarraCorridaPace paceAtual={pace.paceAtual} paceEsperado={pace.paceEsperado} />
 
       {paceRuim && (
         <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-amber-700">
