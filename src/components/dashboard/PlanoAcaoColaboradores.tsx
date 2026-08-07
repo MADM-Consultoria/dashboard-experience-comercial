@@ -52,6 +52,13 @@ export function PlanoAcaoColaboradores({
   // Sparklines e ritmo diário do mês inteiro do período filtrado (dia 1 ao último dia) — uma
   // única consulta pra equipe inteira de cada métrica, não uma por card exibido, pra não
   // multiplicar chamada ao banco por 10-40 colaboradores na tela.
+  //
+  // As 3 consultas (Assinados/Protocolados/Venda Ganha) rodam em SEQUÊNCIA, não em paralelo —
+  // cada uma bate numa function diferente, e cada function do Vercel abre seu próprio pool
+  // pequeno de conexão com o banco (max 2, ver _shared/db.ts). Disparar as 3 ao mesmo tempo
+  // (mais as ~6 do useIntelligence que já rodam junto na Visão Geral) já estourou o limite de
+  // conexões simultâneas do usuário do banco antes — em sequência, o pico de conexões fica bem
+  // menor, ao custo de um pouco mais de tempo até o último gráfico aparecer.
   useEffect(() => {
     if (!sessao) return;
     let cancelado = false;
@@ -69,31 +76,32 @@ export function PlanoAcaoColaboradores({
       return series;
     }
 
-    fetchAssinadosDiarioTodos(sessao.token, inicio, fim)
-      .then((porConsultor) => {
+    async function carregarSequencial() {
+      try {
+        const porConsultor = await fetchAssinadosDiarioTodos(sessao!.token, inicio, fim);
         if (cancelado) return;
         setSeriesPorConsultor(montarSeries(porConsultor));
         setDiasSerie(dias);
-      })
-      .catch(() => {
+      } catch {
         if (!cancelado) setSeriesPorConsultor(new Map());
-      });
+      }
 
-    fetchProtocoladosDiarioTodos(sessao.token, inicio, fim)
-      .then((porConsultor) => {
+      try {
+        const porConsultor = await fetchProtocoladosDiarioTodos(sessao!.token, inicio, fim);
         if (!cancelado) setSeriesProtocoladosPorConsultor(montarSeries(porConsultor));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelado) setSeriesProtocoladosPorConsultor(new Map());
-      });
+      }
 
-    fetchVendaGanhaDiarioTodos(sessao.token, inicio, fim)
-      .then((porConsultor) => {
+      try {
+        const porConsultor = await fetchVendaGanhaDiarioTodos(sessao!.token, inicio, fim);
         if (!cancelado) setSeriesVendaGanhaPorConsultor(montarSeries(porConsultor));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelado) setSeriesVendaGanhaPorConsultor(new Map());
-      });
+      }
+    }
+
+    carregarSequencial();
 
     return () => {
       cancelado = true;
