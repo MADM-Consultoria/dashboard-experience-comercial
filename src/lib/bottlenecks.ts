@@ -1,6 +1,11 @@
 
 import type { ColaboradorMetricas, EtapaFunil, Gargalo, KpiEquipe } from '@/types/domain';
 
+/** ColaboradorReal (relatorioJudit.ts) tem `vendaGanha`, mas o tipo base ColaboradorMetricas
+ * não — como esta function só recebe o objeto real em runtime, declara aqui só o campo extra
+ * que precisa, mesmo padrão já usado em aplicarAssinadosPeriodo.ts. */
+type ColaboradorComVendaGanha = ColaboradorMetricas & { vendaGanha?: number };
+
 export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): EtapaFunil[] {
   return [
     { etapa: 'Recebidos', valor: kpi.totalRecebidos, taxaConversaoEtapaAnterior: null },
@@ -23,7 +28,7 @@ export function calcularFunilEquipe(kpi: KpiEquipe, totalVendaGanha: number): Et
  * Varre os colaboradores e a equipe em busca de gargalos operacionais,
  * priorizando sempre a perda estimada em quantidade de processos.
  */
-export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiEquipe): Gargalo[] {
+export function detectarGargalos(colaboradores: ColaboradorComVendaGanha[], kpi: KpiEquipe): Gargalo[] {
   const gargalos: Gargalo[] = [];
 
   // Gargalo estrutural: etapa Assinados -> Protocolados
@@ -61,9 +66,15 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
     });
   }
 
-  // Gargalos por colaborador — maior perda individual
+  // Gargalos por colaborador — maior perda individual. "Perda" = casos assinados que ainda não
+  // fecharam por NENHUM dos dois caminhos possíveis (Protocolados no jurídico OU Venda Ganha
+  // por outro advogado) — mesma definição de "caso fechado" que já decide conversaoAssinados-
+  // Protocolados e colaborador.status (ver aplicarAssinadosPeriodo.ts). Contar só Protocolados
+  // aqui e usar colaborador.status (que já soma Venda Ganha) pra severidade criava uma
+  // contradição visível: quem fechou tudo via Venda Ganha aparecia com perda alta E "Excelente"
+  // ao mesmo tempo, porque as duas contas usavam regras diferentes pro que é "resolvido".
   const porPerda = [...colaboradores]
-    .map((c) => ({ colaborador: c, perda: c.assinados - c.protocolados }))
+    .map((c) => ({ colaborador: c, perda: c.assinados - c.protocolados - (c.vendaGanha ?? 0) }))
     .filter((x) => x.perda > 0)
     .sort((a, b) => b.perda - a.perda);
 
@@ -72,7 +83,7 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
       id: `gargalo-colaborador-${colaborador.id}`,
       tipo: 'colaborador',
       titulo: `${colaborador.nome} concentra a maior perda individual`,
-      descricao: `${perda} assinado(s) sem protocolo (${colaborador.conversaoAssinadosProtocolados.toFixed(0)}%).`,
+      descricao: `${perda} assinado(s) sem protocolo nem venda ganha (${colaborador.conversaoAssinadosProtocolados.toFixed(0)}% resolvido).`,
       impactoEstimado: `${perda} processo(s) represado(s)`,
       perdaEstimada: perda,
       impactoPct: 100 - colaborador.conversaoAssinadosProtocolados,
