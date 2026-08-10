@@ -69,6 +69,12 @@ export function ajustarColaboradoresParaPeriodo<T extends ColaboradorMetricas & 
     // de um caso assinado — contam juntos pra taxa de qualidade.
     const conversaoAssinadosProtocolados = pct(protocolados + vendaGanha, assinados);
     const atingimentoMetaMensal = pct(assinados, c.metaMensal);
+    // Média de assinados por dia útil do período — mesma conta de mediaDiaColaborador em
+    // plano-acao/score.ts. Sem isso o campo ficava travado no 0 herdado de
+    // criarColaboradorSintetico (relatorioJudit.ts), já que nada mais recalculava ele depois
+    // que paramos de usar madm.view_relatorio_judit — daí o card "Produtividade média da
+    // equipe" nunca saía de 0.0.
+    const produtividade = diasUteisDecorridos > 0 ? assinados / diasUteisDecorridos : 0;
     const confiancaVolume = Math.min(1, assinados / VOLUME_MINIMO_CONFIANCA);
     const eficiencia = Math.min(
       100,
@@ -101,6 +107,7 @@ export function ajustarColaboradoresParaPeriodo<T extends ColaboradorMetricas & 
       conversaoGeral: conversaoRecebidosAssinados,
       conversaoJudit,
       atingimentoMetaMensal,
+      produtividade,
       eficiencia,
       status,
     };
