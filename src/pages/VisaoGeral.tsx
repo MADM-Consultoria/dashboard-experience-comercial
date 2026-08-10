@@ -75,8 +75,11 @@ export default function VisaoGeral() {
   // (Assinados e Recebidos) — não mais o canal do colaborador nem madm.view_relatorio_judit.
   const conversaoGeralPeriodo = kpi.totalRecebidos > 0 ? (kpi.totalAssinados / kpi.totalRecebidos) * 100 : 0;
   const conversaoJuditPeriodo = kpi.totalRecebidosJudit > 0 ? (totalAssinadosJudit / kpi.totalRecebidosJudit) * 100 : 0;
-  const atingimentoMetaPeriodo = metaMensalGeral > 0 ? (kpi.totalAssinados / metaMensalGeral) * 100 : 0;
-  const metaComprometida = atingimentoMetaPeriodo < 90;
+  // Atingimento da meta SEMPRE sobre o total do mês até hoje (kpiMesAtual), nunca sobre o
+  // recorte do calendário — filtrar uma semana e dividir esses poucos dias pela meta do mês
+  // inteiro dava um % minúsculo e disparava o "abaixo do esperado" mesmo com ritmo bom.
+  const atingimentoMetaMes = metaMensalGeral > 0 ? (kpiMesAtual.totalAssinados / metaMensalGeral) * 100 : 0;
+  const metaComprometida = atingimentoMetaMes < 90;
 
   const times = Array.from(new Set(colaboradores.map((c) => c.time)));
   const porTime = times.map((time) => {
@@ -181,8 +184,8 @@ export default function VisaoGeral() {
           </p>
           <p className="mt-1 text-[13px] text-slate-600">
             {metaComprometida
-              ? `Isso representa só ${formatPct(atingimentoMetaPeriodo, 1)} da meta mensal de assinados — abaixo do esperado.`
-              : `Isso representa ${formatPct(atingimentoMetaPeriodo, 1)} da meta mensal de assinados — dentro do esperado.`}
+              ? `No total do mês, contando até hoje, isso representa só ${formatPct(atingimentoMetaMes, 1)} da meta mensal de assinados — abaixo do esperado.`
+              : `No total do mês, contando até hoje, isso representa ${formatPct(atingimentoMetaMes, 1)} da meta mensal de assinados — dentro do esperado.`}
           </p>
         </div>
       </Card>
