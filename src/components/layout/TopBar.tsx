@@ -5,6 +5,7 @@ import { MobileNav } from './MobileNav';
 import { UserMenu } from './UserMenu';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { useAutoRefreshCountdown } from '@/context/AutoRefreshContext';
+import { useAuth } from '@/context/AuthContext';
 
 function formatarContagem(segundos: number): string {
   const m = Math.floor(segundos / 60);
@@ -52,13 +53,28 @@ function BotaoAtualizar() {
   );
 }
 
+/** Nome do time restrito pro supervisor logado, sem o prefixo "Equipe" (sessao.time vem como
+ * "Equipe Felipe" — aqui vira só "Felipe"). Master não tem time restrito, não mostra nada. */
+function useNomeTimeSupervisor() {
+  const { sessao } = useAuth();
+  if (!sessao?.time) return null;
+  return sessao.time.replace(/^Equipe\s+/i, '');
+}
+
 export function TopBar() {
   const { alertas } = useIntelligence();
   const criticos = alertas.filter((a) => a.prioridade === 'critico').length;
+  const nomeTime = useNomeTimeSupervisor();
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 bg-[#f8fafc]/85 dark:bg-slate-900/85 backdrop-blur px-4 lg:px-8">
       <MobileNav />
+
+      {nomeTime && (
+        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold tracking-wide selo-time hidden sm:inline-block">
+          {nomeTime}
+        </span>
+      )}
 
       <div className="flex items-center gap-3 ml-auto">
         <CalendarioSelector />

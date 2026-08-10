@@ -156,6 +156,27 @@ body {
   .pc-vento { opacity: 0; }
 }
 
+/* Selo do time do supervisor, no meio da TopBar (ver TopBar.tsx) — texto com gradiente
+ * animado deslizando por baixo, pra chamar atenção sem ser um elemento piscando/gritando. */
+@keyframes seloTimeBrilho {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.selo-time {
+  background: linear-gradient(90deg, #2563eb, #22d3ee, #2563eb, #60a5fa);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: seloTimeBrilho 4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .selo-time {
+    animation: none;
+    background-position: 0% 50%;
+  }
+}
+
 /* Correção geral do modo escuro: a maioria dos componentes usa classes fixas
  * de texto/fundo em tom claro (text-slate-900, bg-white, etc.), escritas antes
  * do modo escuro existir. Em vez de reescrever cada componente, sobrescrevemos

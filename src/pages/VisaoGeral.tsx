@@ -15,11 +15,9 @@ import { contarDiasUteis, getPeriodoMesDoCalendario } from '@/lib/period';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { formatNumero, formatPct } from '@/lib/format';
 import { ehSupervisor } from '@/lib/colaboradoresAtivos';
-import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function VisaoGeral() {
-  const { sessao } = useAuth();
   const { periodoSelecionado, diasUteisTotaisMes, diasUteisDecorridos, kpi, vendaGanhaTotal, funil, alertas, colaboradores, assinadosJuditPorConsultor, loading, error } = useIntelligence();
   // "Melhor colaborador"/"Precisa de atenção" sempre olham pro MÊS INTEIRO (não um dia/intervalo
   // curto) — mas o mês em questão é o mesmo que está selecionado no calendário do topo (igual
@@ -117,17 +115,7 @@ export default function VisaoGeral() {
 
   return (
     <div>
-      <PageHeader
-        title="Visão Geral"
-        description={`Panorama executivo da operação comercial — Assinados de ${periodoSelecionado.label.toLowerCase()}.`}
-        actions={
-          sessao?.time && (
-            <span className="inline-flex items-center rounded-full bg-blue-500/10 px-3 py-1 text-[12px] font-medium text-blue-700 dark:text-blue-300">
-              {sessao.time}
-            </span>
-          )
-        }
-      />
+      <PageHeader description={`Panorama executivo da operação comercial — Assinados de ${periodoSelecionado.label.toLowerCase()}.`} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <ResumoMesCard
