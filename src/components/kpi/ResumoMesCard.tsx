@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import { BarraCorridaPace } from './BarraCorridaPace';
-import type { NivelStatus, PaceProjecao } from '@/types/domain';
+import { BarraCorridaPace, paceEstaCansado } from './BarraCorridaPace';
+import type { PaceProjecao } from '@/types/domain';
 import { formatNumero } from '@/lib/format';
 
 interface ResumoMesCardProps {
@@ -12,20 +12,18 @@ interface ResumoMesCardProps {
   atual: number;
   meta: number;
   pace: PaceProjecao;
-  /** Classificação do pace do mês (ver classificarPace em diagnostico.ts) — decide se mostra
-   * o aviso simples ("pace atual abaixo do esperado") além dos números de pace. */
-  statusPace: NivelStatus;
   /** Pace mínimo (valor/dia) pro boneco correr em vez de andar cansado — ver BarraCorridaPace. */
   limiarCorrida?: number;
   onClick?: () => void;
 }
 
 /** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + aviso de pace, no estilo do resumo-mês. */
-export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, limiarCorrida, onClick }: ResumoMesCardProps) {
+export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, limiarCorrida, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
-  // Aviso simples só quando o pace está ruim — quando está bom, o card fica quieto (silêncio
-  // já é a informação: nada pra ajustar).
-  const paceRuim = statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico';
+  // A mensagem segue o MESMO limiar do boneco (paceEstaCansado): boneco andando cansado →
+  // aviso de pace baixo; boneco correndo → mensagem de pace bom. Nunca um dizendo uma coisa
+  // e o outro mostrando outra.
+  const paceRuim = paceEstaCansado(pace.paceAtual, limiarCorrida);
 
   return (
     <Card
@@ -64,10 +62,15 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
 
       <BarraCorridaPace paceAtual={pace.paceAtual} paceEsperado={pace.paceEsperado} limiarCorrida={limiarCorrida} />
 
-      {paceRuim && (
+      {paceRuim ? (
         <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-amber-700">
           <AlertTriangle size={13} className="shrink-0 text-amber-500" />
           Pace atual abaixo do pace esperado pra bater a meta esse mês.
+        </p>
+      ) : (
+        <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-emerald-700">
+          <CheckCircle2 size={13} className="shrink-0 text-emerald-500" />
+          Pace bom — ritmo dentro do esperado pra esse mês.
         </p>
       )}
     </Card>

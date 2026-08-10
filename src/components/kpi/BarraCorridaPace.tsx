@@ -15,13 +15,19 @@ import { PersonagemCorredor } from './PersonagemCorredor';
 // seu limiar (Geral 50,3; Judit 25,0 — meta menor, pace/dia naturalmente menor).
 const LIMIAR_PACE_CANSADO_PADRAO = 50.3;
 
+/** Mesmo critério do boneco, exportado pro card decidir qual mensagem mostrar (aviso de pace
+ * baixo vs pace bom) — um único limiar decide animação E texto, nunca desencontrados. */
+export function paceEstaCansado(paceAtual: number, limiarCorrida: number = LIMIAR_PACE_CANSADO_PADRAO): boolean {
+  return Math.round(paceAtual * 10) / 10 < limiarCorrida;
+}
+
 export function BarraCorridaPace({ paceAtual, paceEsperado, limiarCorrida = LIMIAR_PACE_CANSADO_PADRAO }: { paceAtual: number; paceEsperado: number; limiarCorrida?: number }) {
   // Chegada fixa em 100% da pista; se o pace atual já superou o esperado, o corredor encosta na
   // bandeira em vez de estourar pra fora da pista — "passou da meta" já fica claro pela cor.
   const pct = paceEsperado > 0 ? Math.min(100, (paceAtual / paceEsperado) * 100) : 0;
   const naFrente = paceEsperado > 0 && paceAtual >= paceEsperado;
   const cor = naFrente ? '#22c55e' : '#2563eb';
-  const cansado = Math.round(paceAtual * 10) / 10 < limiarCorrida;
+  const cansado = paceEstaCansado(paceAtual, limiarCorrida);
 
   return (
     <div className="pt-3 border-t border-slate-100">
