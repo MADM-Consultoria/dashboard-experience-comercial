@@ -215,10 +215,20 @@ export default function Gargalos() {
             })}
           </div>
 
-          <p className="flex items-center gap-1.5 border-t border-slate-100 px-5 py-3 text-[12px] text-slate-500 bg-slate-50/60">
-            <Sparkles size={13} className="text-blue-500 shrink-0" />
-            Dica: foque primeiro nos gargalos críticos com maior perda estimada pra maximizar resultados.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3 bg-slate-50/60">
+            <p className="flex items-center gap-1.5 text-[12px] text-slate-500">
+              <Sparkles size={13} className="text-blue-500 shrink-0" />
+              Dica: foque primeiro nos gargalos críticos com maior perda estimada pra maximizar resultados.
+            </p>
+            {/* Leva pro Plano de Ação real (Visão Geral) — não é uma tela separada de "planos
+               sugeridos" fabricada, é o mesmo plano de ação por colaborador que já existe. */}
+            <Link
+              to="/"
+              className="flex items-center gap-1 shrink-0 rounded-lg bg-blue-600 px-3.5 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-700 transition-colors"
+            >
+              Ver plano de ação sugerido <ArrowRight size={13} />
+            </Link>
+          </div>
         </Card>
       )}
     </div>
