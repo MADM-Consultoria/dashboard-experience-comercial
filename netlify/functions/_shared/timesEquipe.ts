@@ -50,7 +50,6 @@ const NOME_PARA_TIME: Record<string, string> = {
   'Bianca Fernandes Ferreira': 'Equipe Felipe',
   'Diogo dos Santos Dementino': 'Equipe Felipe',
   'Gabriela Porfirio': 'Equipe Felipe',
-  'Giovanna de Almeida Mendonça': 'Equipe Felipe',
   'Jessica de Souza Ramos': 'Equipe Felipe',
   'Raniele Nascimento da Silva': 'Equipe Felipe',
   'Rayssa Oliveira da Silva': 'Equipe Felipe',

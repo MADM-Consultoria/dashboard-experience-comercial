@@ -61,7 +61,6 @@ const ATIVOS: ColaboradorAtivo[] = [
   { nome: 'Bianca Fernandes Ferreira', time: 'Equipe Felipe', canal: 'Judit' },
   { nome: 'Diogo dos Santos Dementino', time: 'Equipe Felipe', canal: 'Discadora' },
   { nome: 'Gabriela Porfirio', time: 'Equipe Felipe', canal: 'Judit' },
-  { nome: 'Giovanna de Almeida Mendonça', time: 'Equipe Felipe', canal: 'Discadora' },
   { nome: 'Jessica de Souza Ramos', time: 'Equipe Felipe', canal: 'Discadora' },
   { nome: 'Raniele Nascimento da Silva', time: 'Equipe Felipe', canal: 'Discadora' },
   { nome: 'Rayssa Oliveira da Silva', time: 'Equipe Felipe', canal: 'Judit' },
