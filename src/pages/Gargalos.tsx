@@ -8,7 +8,7 @@ import { KpiCard } from '@/components/kpi/KpiCard';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { formatNumero, formatPct, STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { Gargalo } from '@/types/domain';
-import { AlertTriangle, ArrowRight, ChevronDown, GitMerge, Lightbulb, ListTree, Sparkles, TrendingDown, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChevronDown, ChevronUp, GitMerge, Lightbulb, ListTree, Sparkles, TrendingDown, Users } from 'lucide-react';
 
 const TIPO_LABEL: Record<Gargalo['tipo'], string> = {
   etapa_funil: 'Etapa do funil',
@@ -46,15 +46,8 @@ export default function Gargalos() {
   const [filtroTipo, setFiltroTipo] = useState<Gargalo['tipo'] | null>(null);
   const [ordenacao, setOrdenacao] = useState<Ordenacao>('perda');
   const [menuOrdenacaoAberto, setMenuOrdenacaoAberto] = useState(false);
-  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
-
-  const toggle = (id: string) => {
-    setExpandidos((atual) => {
-      const novo = new Set(atual);
-      novo.has(id) ? novo.delete(id) : novo.add(id);
-      return novo;
-    });
-  };
+  // Um botão só controla a lista inteira — sem clique individual por linha.
+  const [mostrarPlano, setMostrarPlano] = useState(false);
 
   const filtrados = useMemo(() => {
     const lista = gargalos.filter((g) => !filtroTipo || g.tipo === filtroTipo);
@@ -66,14 +59,6 @@ export default function Gargalos() {
 
   const perdaTotal = gargalos.reduce((a, g) => a + g.perdaEstimada, 0);
   const criticos = gargalos.filter((g) => g.severidade === 'critico').length;
-
-  // "Ver plano de ação sugerido": em vez de mandar pra outra tela, expande de uma vez a ação
-  // recomendada de cada gargalo filtrado — a solução já está em cada linha, só escondida até
-  // clicar; isso poupa o clique um por um.
-  const todosAbertos = filtrados.length > 0 && filtrados.every((g) => expandidos.has(g.id));
-  const verPlanoDeAcao = () => {
-    setExpandidos(todosAbertos ? new Set() : new Set(filtrados.map((g) => g.id)));
-  };
 
   return (
     <div>
@@ -155,12 +140,11 @@ export default function Gargalos() {
           <div className="divide-y divide-slate-100">
             {filtrados.map((g) => {
               const cor = STATUS_COLOR[g.severidade];
-              const aberto = expandidos.has(g.id);
               const bandaBoa = g.severidade === 'excelente' || g.severidade === 'bom';
 
               return (
                 <div key={g.id}>
-                  <button onClick={() => toggle(g.id)} className={clsx(GRID_LINHA, 'w-full px-5 py-4 text-left hover:bg-slate-50 transition-colors')}>
+                  <div className={clsx(GRID_LINHA, 'px-5 py-4')}>
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: `${cor}1a`, color: cor }}>
                       {bandaBoa ? <TrendingDown size={18} className="rotate-180" /> : <AlertTriangle size={18} />}
                     </div>
@@ -197,10 +181,10 @@ export default function Gargalos() {
                       <p className="text-sm font-semibold text-slate-900">{formatNumero(g.perdaEstimada)}</p>
                     </div>
 
-                    <ChevronDown size={18} className={clsx('text-slate-400 transition-transform', aberto && 'rotate-180')} />
-                  </button>
+                    <div />
+                  </div>
 
-                  {aberto && (
+                  {mostrarPlano && (
                     <div className="px-5 pb-4 pl-[68px] animate-fade-in">
                       {g.colaboradorId && (
                         <Link to={`/colaboradores/${g.colaboradorId}`} className="mb-3 inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
@@ -228,14 +212,14 @@ export default function Gargalos() {
               <Sparkles size={13} className="text-blue-500 shrink-0" />
               Dica: foque primeiro nos gargalos críticos com maior perda estimada pra maximizar resultados.
             </p>
-            {/* Expande a "Ação recomendada" de cada gargalo da lista de uma vez — a solução já
-               está em cada linha, isso só poupa abrir uma por uma. Nada de navegar pra outra
-               tela nem inventar um "plano" à parte que não existe nos dados. */}
+            {/* Único controle da lista inteira — não tem mais clique individual por linha.
+               Mostra/esconde a "Ação recomendada" de todos os gargalos filtrados de uma vez. */}
             <button
-              onClick={verPlanoDeAcao}
+              onClick={() => setMostrarPlano((v) => !v)}
               className="flex items-center gap-1.5 shrink-0 rounded-lg bg-blue-600 px-3.5 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-700 transition-colors"
             >
-              <Lightbulb size={13} /> {todosAbertos ? 'Ocultar plano de ação' : 'Ver plano de ação sugerido'}
+              {mostrarPlano ? <ChevronUp size={13} /> : <Lightbulb size={13} />}
+              {mostrarPlano ? 'Ocultar plano de ação' : 'Ver plano de ação sugerido'}
             </button>
           </div>
         </Card>
