@@ -8,7 +8,7 @@ import { KpiCard } from '@/components/kpi/KpiCard';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { formatNumero, formatPct, STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { Gargalo } from '@/types/domain';
-import { AlertTriangle, ArrowRight, ChevronDown, GitMerge, ListTree, Sparkles, TrendingDown, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChevronDown, GitMerge, Lightbulb, ListTree, Sparkles, TrendingDown, Users } from 'lucide-react';
 
 const TIPO_LABEL: Record<Gargalo['tipo'], string> = {
   etapa_funil: 'Etapa do funil',
@@ -66,6 +66,14 @@ export default function Gargalos() {
 
   const perdaTotal = gargalos.reduce((a, g) => a + g.perdaEstimada, 0);
   const criticos = gargalos.filter((g) => g.severidade === 'critico').length;
+
+  // "Ver plano de ação sugerido": em vez de mandar pra outra tela, expande de uma vez a ação
+  // recomendada de cada gargalo filtrado — a solução já está em cada linha, só escondida até
+  // clicar; isso poupa o clique um por um.
+  const todosAbertos = filtrados.length > 0 && filtrados.every((g) => expandidos.has(g.id));
+  const verPlanoDeAcao = () => {
+    setExpandidos(todosAbertos ? new Set() : new Set(filtrados.map((g) => g.id)));
+  };
 
   return (
     <div>
@@ -220,14 +228,15 @@ export default function Gargalos() {
               <Sparkles size={13} className="text-blue-500 shrink-0" />
               Dica: foque primeiro nos gargalos críticos com maior perda estimada pra maximizar resultados.
             </p>
-            {/* Leva pro Plano de Ação real (Visão Geral) — não é uma tela separada de "planos
-               sugeridos" fabricada, é o mesmo plano de ação por colaborador que já existe. */}
-            <Link
-              to="/"
-              className="flex items-center gap-1 shrink-0 rounded-lg bg-blue-600 px-3.5 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-700 transition-colors"
+            {/* Expande a "Ação recomendada" de cada gargalo da lista de uma vez — a solução já
+               está em cada linha, isso só poupa abrir uma por uma. Nada de navegar pra outra
+               tela nem inventar um "plano" à parte que não existe nos dados. */}
+            <button
+              onClick={verPlanoDeAcao}
+              className="flex items-center gap-1.5 shrink-0 rounded-lg bg-blue-600 px-3.5 py-1.5 text-[12.5px] font-medium text-white hover:bg-blue-700 transition-colors"
             >
-              Ver plano de ação sugerido <ArrowRight size={13} />
-            </Link>
+              <Lightbulb size={13} /> {todosAbertos ? 'Ocultar plano de ação' : 'Ver plano de ação sugerido'}
+            </button>
           </div>
         </Card>
       )}
