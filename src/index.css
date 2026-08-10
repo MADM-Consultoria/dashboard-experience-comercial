@@ -146,10 +146,62 @@ body {
 .pc-vento--2         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -3); }
 .pc-vento--3         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -1.6); }
 
+/* Estado "cansado" — pace muito abaixo do esperado (ver BarraCorridaPace.tsx): passada bem
+ * mais lenta e bem mais curta (quase andando, não correndo), sem o rastro de velocidade (já
+ * escondido no componente), com uma gota de suor pingando. Mesma lógica de delay oposto entre
+ * lado da frente/trás, só que numa duração própria — bem mais lenta que a de correr. */
+:root {
+  --pc-duracao-cansado: 1.35s;
+}
+
+@keyframes pcCoxaCansado {
+  0%   { transform: rotate(-16deg); }
+  50%  { transform: rotate(13deg); }
+  100% { transform: rotate(-16deg); }
+}
+@keyframes pcCanelaCansado {
+  0%   { transform: rotate(5deg); }
+  40%  { transform: rotate(18deg); }
+  70%  { transform: rotate(30deg); }
+  100% { transform: rotate(5deg); }
+}
+@keyframes pcBracoCansado {
+  0%   { transform: rotate(-8deg); }
+  50%  { transform: rotate(8deg); }
+  100% { transform: rotate(-8deg); }
+}
+@keyframes pcCorpoCansado {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-0.7px); }
+}
+@keyframes pcSombraCansado {
+  0%, 100% { transform: scaleX(1); opacity: 0.15; }
+  50%      { transform: scaleX(0.92); opacity: 0.13; }
+}
+/* Gota de suor: nasce na testa, escorre e evapora — repete a cada passo lento. */
+@keyframes pcSuor {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  10%  { opacity: 0.9; }
+  70%  { transform: translateY(9px) scale(0.85); opacity: 0.7; }
+  100% { transform: translateY(11px) scale(0.6); opacity: 0; }
+}
+
+.pc-quadril--frente--cansado { animation: pcCoxaCansado var(--pc-duracao-cansado) ease-in-out infinite; }
+.pc-quadril--tras--cansado   { animation: pcCoxaCansado var(--pc-duracao-cansado) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-cansado) / -2); }
+.pc-joelho--frente--cansado   { animation: pcCanelaCansado var(--pc-duracao-cansado) ease-in-out infinite; }
+.pc-joelho--tras--cansado     { animation: pcCanelaCansado var(--pc-duracao-cansado) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-cansado) / -2); }
+.pc-ombro--frente--cansado    { animation: pcBracoCansado var(--pc-duracao-cansado) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-cansado) / -2); }
+.pc-ombro--tras--cansado      { animation: pcBracoCansado var(--pc-duracao-cansado) ease-in-out infinite; }
+.pc-corpo--cansado            { animation: pcCorpoCansado calc(var(--pc-duracao-cansado) / 2) ease-in-out infinite; }
+.pc-sombra--cansado           { animation: pcSombraCansado calc(var(--pc-duracao-cansado) / 2) ease-in-out infinite; transform-origin: 22px 49px; }
+.pc-suor                      { animation: pcSuor 1.8s ease-in infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .pc-quadril--frente, .pc-quadril--tras, .pc-joelho--frente, .pc-joelho--tras,
   .pc-ombro--frente, .pc-ombro--tras, .pc-corpo, .pc-sombra,
-  .pc-vento--1, .pc-vento--2, .pc-vento--3 {
+  .pc-vento--1, .pc-vento--2, .pc-vento--3,
+  .pc-quadril--frente--cansado, .pc-quadril--tras--cansado, .pc-joelho--frente--cansado, .pc-joelho--tras--cansado,
+  .pc-ombro--frente--cansado, .pc-ombro--tras--cansado, .pc-corpo--cansado, .pc-sombra--cansado, .pc-suor {
     animation: none;
   }
   /* Sem animação, os risquinhos de vento ficariam parados no ar — some com eles. */

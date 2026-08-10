@@ -12,6 +12,11 @@
  * contra-fase às pernas, bounce vertical no corpo, sombra que respira e rastro de vento.
  * Puramente decorativo (aria-hidden) — quem lê a barra é o texto ao redor.
  *
+ * `cansado`: quando o pace está muito abaixo do esperado (ver BarraCorridaPace.tsx), troca pro
+ * conjunto de classes "--cansado" (definidas em index.css) — passada bem mais lenta e curta,
+ * quase andando, sem o rastro de velocidade, e com uma gota de suor na testa pingando. É o
+ * mesmo sinal visual que "pace ruim" já dava por cor, só que também no jeito de correr.
+ *
  * Estrutura de cada membro: <g posição-via-atributo-svg><g className="rotação-via-css">forma.
  * O CSS `transform` da animação substituiria (não somaria com) o transform do atributo no
  * mesmo elemento — por isso posição e rotação ficam em níveis separados.
@@ -68,32 +73,42 @@ function Braco({ cor, tras }: { cor: string; tras?: boolean }) {
   );
 }
 
-export function PersonagemCorredor({ cor }: { cor: string }) {
+export function PersonagemCorredor({ cor, cansado }: { cor: string; cansado?: boolean }) {
+  const sufixo = cansado ? '--cansado' : '';
   return (
     <svg width="34" height="40" viewBox="0 0 44 52" aria-hidden="true" style={{ overflow: 'visible' }}>
-      {/* rastro de velocidade atrás do corredor */}
-      <g stroke={cor} strokeWidth="1.6" strokeLinecap="round" fill="none">
-        <line className="pc-vento pc-vento--1" x1="2" y1="18" x2="10" y2="18" />
-        <line className="pc-vento pc-vento--2" x1="0" y1="25" x2="9" y2="25" />
-        <line className="pc-vento pc-vento--3" x1="3" y1="32" x2="10" y2="32" />
-      </g>
+      {/* rastro de velocidade — some quando tá cansado (andando, não correndo, não faz sentido ter linha de velocidade) */}
+      {!cansado && (
+        <g stroke={cor} strokeWidth="1.6" strokeLinecap="round" fill="none">
+          <line className="pc-vento pc-vento--1" x1="2" y1="18" x2="10" y2="18" />
+          <line className="pc-vento pc-vento--2" x1="0" y1="25" x2="9" y2="25" />
+          <line className="pc-vento pc-vento--3" x1="3" y1="32" x2="10" y2="32" />
+        </g>
+      )}
 
       {/* sombra no chão — respira em contra-fase ao bounce do corpo */}
-      <ellipse className="pc-sombra" cx="22" cy="49" rx="9" ry="2.2" fill="#0f172a" opacity="0.15" />
+      <ellipse className={`pc-sombra pc-sombra${sufixo}`} cx="22" cy="49" rx="9" ry="2.2" fill="#0f172a" opacity="0.15" />
 
-      <g className="pc-corpo">
+      {/* gota de suor pingando da testa — só quando cansado */}
+      {cansado && (
+        <g transform="translate(28.5 5)">
+          <path className="pc-suor" d="M 0 0 C -1.4 1.6, -1.4 3.2, 0 3.2 C 1.4 3.2, 1.4 1.6, 0 0 Z" fill="#38bdf8" />
+        </g>
+      )}
+
+      <g className={`pc-corpo pc-corpo${sufixo}`}>
         {/* ---- camada de trás (tom de pele mais escuro = profundidade flat) ---- */}
         <g transform="translate(21.6 16.2)">
-          <g className="pc-ombro pc-ombro--tras">
+          <g className={`pc-ombro pc-ombro--tras${sufixo}`}>
             <Braco cor={cor} tras />
           </g>
         </g>
 
         <g transform="translate(19.6 30)">
-          <g className="pc-quadril pc-quadril--tras">
+          <g className={`pc-quadril pc-quadril--tras${sufixo}`}>
             <Coxa pele={PELE_TRAS} />
             <g transform="translate(0 9.5)">
-              <g className="pc-joelho pc-joelho--tras">
+              <g className={`pc-joelho pc-joelho--tras${sufixo}`}>
                 <Canela pele={PELE_TRAS} />
                 <g transform="translate(0 9)">
                   <Tenis escuro />
@@ -122,10 +137,10 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
 
         {/* ---- perna da frente (embaixo dos shorts, por cima do tronco) ---- */}
         <g transform="translate(20.8 30)">
-          <g className="pc-quadril pc-quadril--frente">
+          <g className={`pc-quadril pc-quadril--frente${sufixo}`}>
             <Coxa pele={PELE} />
             <g transform="translate(0 9.5)">
-              <g className="pc-joelho pc-joelho--frente">
+              <g className={`pc-joelho pc-joelho--frente${sufixo}`}>
                 <Canela pele={PELE} />
                 <g transform="translate(0 9)">
                   <Tenis />
@@ -160,7 +175,7 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
 
         {/* ---- braço da frente ---- */}
         <g transform="translate(23 16.2)">
-          <g className="pc-ombro pc-ombro--frente">
+          <g className={`pc-ombro pc-ombro--frente${sufixo}`}>
             <Braco cor={cor} />
           </g>
         </g>
