@@ -45,11 +45,23 @@ export function BarraCorridaPace({ paceAtual, paceEsperado, limiarCorrida = LIMI
           <PersonagemCorredor cor={cor} cansado={cansado} />
         </div>
 
-        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+        {/* pista de corrida: asfalto claro com acostamento escuro e faixa central tracejada;
+            o progresso é um "pill" azul/verde que avança por dentro da pista */}
+        <div className="h-5 rounded-full bg-slate-100 border-2 border-slate-300 shadow-inner overflow-hidden relative">
+          {/* faixa central tracejada da estrada */}
           <div
-            className="h-full rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
-            style={{ width: `${pct}%`, backgroundColor: cor }}
+            className="absolute inset-x-2 top-1/2 -translate-y-1/2 h-[2px] opacity-70"
+            style={{
+              backgroundImage: 'repeating-linear-gradient(to right, #ffffff 0 8px, transparent 8px 16px)',
+            }}
           />
+          <div
+            className="absolute left-1 top-1 bottom-1 rounded-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+            style={{ width: `calc(${pct}% - 4px)`, minWidth: pct > 0 ? '12px' : '0', backgroundColor: cor }}
+          >
+            {/* brilho no início do pill, como o farol da imagem */}
+            <div className="absolute left-1.5 top-1/2 -translate-y-1/2 h-1.5 w-3 rounded-full bg-white/80" />
+          </div>
         </div>
 
         {/* bandeira de chegada em SVG (sem emoji), plantada logo acima do fim da pista */}
