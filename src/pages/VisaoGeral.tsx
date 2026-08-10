@@ -142,6 +142,7 @@ export default function VisaoGeral() {
           meta={metaMensalJudit}
           pace={paceJudit}
           statusPace={statusPaceJudit}
+          limiarCorrida={25}
           onClick={() => setModalAberto('judit')}
         />
       </div>

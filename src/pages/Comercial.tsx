@@ -59,7 +59,7 @@ export default function Comercial() {
           <ResumoMesCard titulo="Geral · Assinados" icon={Gauge} atual={kpi.totalAssinados} meta={metaMensalGeral} pace={paceEquipe} statusPace={statusPaceEquipe} />
         </div>
         <div className="xl:col-span-2">
-          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} statusPace={statusPaceJudit} />
+          <ResumoMesCard titulo="Judit · Assinados" icon={TrendingUp} atual={assinadosJudit} meta={metaMensalJudit} pace={paceJudit} statusPace={statusPaceJudit} limiarCorrida={25} />
         </div>
         <div className="xl:col-span-2 grid grid-cols-2 gap-4">
           <KpiCard titulo="Recebidos no período" valor={formatNumero(kpi.totalRecebidos)} icon={FileStack} accent="info" />

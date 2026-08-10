@@ -15,11 +15,13 @@ interface ResumoMesCardProps {
   /** Classificação do pace do mês (ver classificarPace em diagnostico.ts) — decide se mostra
    * o aviso simples ("pace atual abaixo do esperado") além dos números de pace. */
   statusPace: NivelStatus;
+  /** Pace mínimo (valor/dia) pro boneco correr em vez de andar cansado — ver BarraCorridaPace. */
+  limiarCorrida?: number;
   onClick?: () => void;
 }
 
 /** Card executivo "Geral/Judit · Assinados": progresso do mês + pace + aviso de pace, no estilo do resumo-mês. */
-export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, onClick }: ResumoMesCardProps) {
+export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPace, limiarCorrida, onClick }: ResumoMesCardProps) {
   const progresso = meta > 0 ? (atual / meta) * 100 : 0;
   // Aviso simples só quando o pace está ruim — quando está bom, o card fica quieto (silêncio
   // já é a informação: nada pra ajustar).
@@ -60,7 +62,7 @@ export function ResumoMesCard({ titulo, icon: Icon, atual, meta, pace, statusPac
         <span className="text-xs text-slate-500">{progresso.toFixed(0)}%</span>
       </div>
 
-      <BarraCorridaPace paceAtual={pace.paceAtual} paceEsperado={pace.paceEsperado} />
+      <BarraCorridaPace paceAtual={pace.paceAtual} paceEsperado={pace.paceEsperado} limiarCorrida={limiarCorrida} />
 
       {paceRuim && (
         <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-amber-700">

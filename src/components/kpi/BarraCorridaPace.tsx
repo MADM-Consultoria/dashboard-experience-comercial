@@ -9,18 +9,19 @@ import { PersonagemCorredor } from './PersonagemCorredor';
  * (menos da metade), o corredor passa a andar devagar e cansado, suando — reforça visualmente
  * que tá abaixo do esperado, sem tirar os números.
  */
-// Limiar no VALOR do pace (assinados/dia), não em % da meta: com média de 50,3/dia pra cima o
+// Limiar no VALOR do pace (assinados/dia), não em % da meta: com média no limiar ou acima o
 // boneco corre; abaixo disso anda cansado. Compara arredondado em 1 casa, igual ao número
-// "Pace atual: X.X/dia" que aparece no card — o que se lê é o que decide.
-const LIMIAR_PACE_CANSADO = 50.3;
+// "Pace atual: X.X/dia" que aparece no card — o que se lê é o que decide. Cada card passa o
+// seu limiar (Geral 50,3; Judit 25,0 — meta menor, pace/dia naturalmente menor).
+const LIMIAR_PACE_CANSADO_PADRAO = 50.3;
 
-export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: number; paceEsperado: number }) {
+export function BarraCorridaPace({ paceAtual, paceEsperado, limiarCorrida = LIMIAR_PACE_CANSADO_PADRAO }: { paceAtual: number; paceEsperado: number; limiarCorrida?: number }) {
   // Chegada fixa em 100% da pista; se o pace atual já superou o esperado, o corredor encosta na
   // bandeira em vez de estourar pra fora da pista — "passou da meta" já fica claro pela cor.
   const pct = paceEsperado > 0 ? Math.min(100, (paceAtual / paceEsperado) * 100) : 0;
   const naFrente = paceEsperado > 0 && paceAtual >= paceEsperado;
   const cor = naFrente ? '#22c55e' : '#2563eb';
-  const cansado = Math.round(paceAtual * 10) / 10 < LIMIAR_PACE_CANSADO;
+  const cansado = Math.round(paceAtual * 10) / 10 < limiarCorrida;
 
   return (
     <div className="pt-3 border-t border-slate-100">
