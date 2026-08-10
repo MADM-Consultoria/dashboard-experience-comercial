@@ -62,14 +62,14 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
 
       <g className="pc-corpo">
         {/* ---- camada de trás ---- */}
-        <g transform="translate(22 17)">
+        <g transform="translate(21.6 16.2)">
           <g className="pc-ombro pc-ombro--tras">
             <Braco cor={cor} tras />
           </g>
         </g>
 
         {/* perna de trás: coxa (quadril) → canela (joelho) → tênis */}
-        <g transform="translate(19.5 30)">
+        <g transform="translate(19.6 30)">
           <g className="pc-quadril pc-quadril--tras">
             <path d="M 0 0 L 0 9.5" stroke={PELE} strokeWidth="4.8" strokeLinecap="round" opacity="0.82" />
             <g transform="translate(0 9.5)">
@@ -84,21 +84,22 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
         </g>
 
         {/* ---- tronco ---- */}
-        {/* camisa: inclinada pra frente, na cor do pace */}
-        <path d="M 23.5 14.5 C 21.5 19, 20.5 24, 21 30" stroke={cor} strokeWidth="9.5" strokeLinecap="round" fill="none" />
-        {/* brilho lateral da camisa (pseudo-volume, sem gradient) */}
-        <path d="M 25.5 16 C 24 20, 23.5 24, 23.8 28" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.28" />
+        {/* camisa: quase ereta, só uma inclinação leve de sprint (peito na frente do quadril),
+           sem corcunda — postura de atleta, não de quem corre curvado */}
+        <path d="M 22.6 15 C 23.2 19.5, 22 25, 20.9 30" stroke={cor} strokeWidth="9.5" strokeLinecap="round" fill="none" />
+        {/* brilho no peito (pseudo-volume, sem gradient) */}
+        <path d="M 24.8 16.5 C 25.2 20, 24.4 24, 23.8 27.5" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" fill="none" opacity="0.28" />
         {/* sombra inferior da camisa */}
-        <path d="M 21.6 24 C 21.3 26.5, 21.2 28, 21.4 29.5" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.16" />
+        <path d="M 21.2 24.5 C 21 26.5, 20.9 28, 21 29.5" stroke="#0f172a" strokeWidth="2.4" strokeLinecap="round" fill="none" opacity="0.16" />
 
         {/* shorts cobrindo o quadril (as coxas giram por baixo) */}
-        <path d="M 16.6 27.2 L 24.6 27.4 Q 25.6 30.8 24 32.4 L 20.8 31.6 L 18.4 32.8 Q 16 31 16.6 27.2 Z" fill={SHORTS} />
-        <path d="M 17.4 28 L 24.2 28.2" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" opacity="0.2" />
+        <path d="M 16.4 27.2 L 24.4 27.2 Q 25.2 30.6 23.8 32.2 L 20.6 31.4 L 18.2 32.6 Q 15.9 30.8 16.4 27.2 Z" fill={SHORTS} />
+        <path d="M 17.2 28 L 24 28" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" opacity="0.2" />
 
-        {/* ---- cabeça (virada pra direita) ---- */}
-        <g transform="translate(28 9)">
+        {/* ---- cabeça (em cima dos ombros, queixo erguido, olhando pra frente) ---- */}
+        <g transform="translate(24.6 8)">
           {/* pescoço */}
-          <path d="M -3.4 3.6 L -4.6 6.4" stroke={PELE} strokeWidth="3.2" strokeLinecap="round" />
+          <path d="M -1.4 4 L -2.2 7.4" stroke={PELE} strokeWidth="3.2" strokeLinecap="round" />
           {/* rosto */}
           <circle r="5.6" fill={PELE} />
           {/* orelha */}
@@ -115,7 +116,7 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
 
         {/* ---- camada da frente ---- */}
         {/* perna da frente */}
-        <g transform="translate(21 30)">
+        <g transform="translate(20.8 30)">
           <g className="pc-quadril pc-quadril--frente">
             <path d="M 0 0 L 0 9.5" stroke={PELE} strokeWidth="4.8" strokeLinecap="round" />
             <g transform="translate(0 9.5)">
@@ -130,7 +131,7 @@ export function PersonagemCorredor({ cor }: { cor: string }) {
         </g>
 
         {/* braço da frente */}
-        <g transform="translate(23.5 17)">
+        <g transform="translate(23 16.2)">
           <g className="pc-ombro pc-ombro--frente">
             <Braco cor={cor} />
           </g>
