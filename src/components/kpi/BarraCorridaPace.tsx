@@ -9,7 +9,7 @@ import { PersonagemCorredor } from './PersonagemCorredor';
  * (menos da metade), o corredor passa a andar devagar e cansado, suando — reforça visualmente
  * que tá abaixo do esperado, sem tirar os números.
  */
-const LIMIAR_PACE_CANSADO = 0.5;
+const LIMIAR_PACE_CANSADO = 0.503;
 
 export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: number; paceEsperado: number }) {
   // Chegada fixa em 100% da pista; se o pace atual já superou o esperado, o corredor encosta na
