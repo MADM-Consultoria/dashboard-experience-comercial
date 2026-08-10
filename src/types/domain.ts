@@ -145,6 +145,10 @@ export interface Gargalo {
   descricao: string;
   impactoEstimado: string;
   perdaEstimada: number; // quantidade de processos perdidos estimados
+  /** % real que dá sentido à barra de impacto na tela (taxa de conversão da etapa/colaborador
+   * pro tipo etapa_funil/colaborador; % da equipe afetada pro tipo processo) — nunca inventado,
+   * sempre a mesma taxa já usada pra decidir a severidade deste gargalo. */
+  impactoPct: number;
   severidade: NivelStatus;
   colaboradorId?: string;
   recomendacoes: string[];

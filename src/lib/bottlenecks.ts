@@ -36,6 +36,9 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
       descricao: `${perdaAssinadosProtocolados} assinado(s) ainda sem protocolo (${kpi.taxaProtocolados.toFixed(0)}%).`,
       impactoEstimado: `${perdaAssinadosProtocolados} processo(s) parados`,
       perdaEstimada: perdaAssinadosProtocolados,
+      // Impacto = % que AINDA FALTA protocolar (inverso da taxa de conversão) — barra cheia
+      // quer dizer "quase tudo parado", não "quase tudo indo bem".
+      impactoPct: 100 - kpi.taxaProtocolados,
       severidade: kpi.taxaProtocolados < 60 ? 'critico' : kpi.taxaProtocolados < 75 ? 'alerta' : 'atencao',
       recomendacoes: ['Definir SLA de protocolo e monitorar diariamente os assinados pendentes.'],
     });
@@ -52,6 +55,7 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
       descricao: `${perdaRecebidosAssinados} recebido(s) não assinado(s) (${taxaRecebidosAssinados.toFixed(0)}%).`,
       impactoEstimado: `${perdaRecebidosAssinados} oportunidade(s) perdida(s)`,
       perdaEstimada: perdaRecebidosAssinados,
+      impactoPct: 100 - taxaRecebidosAssinados,
       severidade: taxaRecebidosAssinados < 60 ? 'alerta' : 'atencao',
       recomendacoes: ['Revisar script de fechamento e reduzir o tempo de retorno ao cliente.'],
     });
@@ -71,6 +75,7 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
       descricao: `${perda} assinado(s) sem protocolo (${colaborador.conversaoAssinadosProtocolados.toFixed(0)}%).`,
       impactoEstimado: `${perda} processo(s) represado(s)`,
       perdaEstimada: perda,
+      impactoPct: 100 - colaborador.conversaoAssinadosProtocolados,
       severidade: colaborador.status,
       colaboradorId: colaborador.id,
       recomendacoes: ['Auditar a carteira e redistribuir os casos parados.'],
@@ -87,6 +92,8 @@ export function detectarGargalos(colaboradores: ColaboradorMetricas[], kpi: KpiE
       descricao: `${metasComprometidas.length} colaborador(es) abaixo de 70% da meta.`,
       impactoEstimado: 'Risco direto ao resultado mensal da equipe',
       perdaEstimada: metasComprometidas.reduce((a, c) => a + Math.max(0, c.metaMensal - c.protocolados), 0),
+      // % da equipe afetada — real, não uma taxa de conversão como nos outros tipos.
+      impactoPct: (metasComprometidas.length / (colaboradores.length || 1)) * 100,
       severidade: metasComprometidas.length >= colaboradores.length / 2 ? 'critico' : 'alerta',
       recomendacoes: ['Redistribuir carteira e acompanhar semanalmente.'],
     });
