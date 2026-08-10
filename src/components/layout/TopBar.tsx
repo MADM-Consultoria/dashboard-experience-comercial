@@ -53,12 +53,11 @@ function BotaoAtualizar() {
   );
 }
 
-/** Nome do time restrito pro supervisor logado, sem o prefixo "Equipe" (sessao.time vem como
- * "Equipe Felipe" — aqui vira só "Felipe"). Master não tem time restrito, não mostra nada. */
+/** Nome do time restrito pro supervisor logado (sessao.time já vem como "Equipe Felipe").
+ * Master não tem time restrito, não mostra nada. */
 function useNomeTimeSupervisor() {
   const { sessao } = useAuth();
-  if (!sessao?.time) return null;
-  return sessao.time.replace(/^Equipe\s+/i, '');
+  return sessao?.time ?? null;
 }
 
 export function TopBar() {
@@ -71,7 +70,7 @@ export function TopBar() {
       <MobileNav />
 
       {nomeTime && (
-        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold tracking-wide selo-time hidden sm:inline-block">
+        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xl font-extrabold tracking-wide selo-time hidden sm:inline-block">
           {nomeTime}
         </span>
       )}
