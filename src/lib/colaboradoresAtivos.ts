@@ -111,3 +111,11 @@ export function buscarAtivoPorNome(nome: string): ColaboradorAtivo | undefined {
 export function listarAtivos(): ColaboradorAtivo[] {
   return ATIVOS;
 }
+
+/** Quantidade de times reais no cadastro (hoje: Bruno, Debora, Felipe, Ribeirao = 4) — usada
+ * pra ratear a meta geral da empresa entre os times quando um supervisor logado vê só o
+ * próprio time. Deriva do cadastro em vez de vir fixo em 4 no código, pra continuar certo se
+ * um time for criado ou removido. */
+export function contarTimes(): number {
+  return new Set(ATIVOS.map((c) => c.time)).size;
+}

@@ -5,10 +5,13 @@ import { KpiCard } from '@/components/kpi/KpiCard';
 import { ResumoMesCard } from '@/components/kpi/ResumoMesCard';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
+import { contarTimes } from '@/lib/colaboradoresAtivos';
+import { useAuth } from '@/context/AuthContext';
 import { formatNumero, formatPct } from '@/lib/format';
 import { Activity, FileStack, Gauge, TrendingUp } from 'lucide-react';
 
 export default function Comercial() {
+  const { sessao } = useAuth();
   const { kpi, colaboradores, diasUteisTotaisMes, diasUteisDecorridos, loading, error } = useIntelligence();
 
   const mediaAssinadosPorDia = colaboradores.length ? colaboradores.reduce((a, c) => a + c.produtividade, 0) / colaboradores.length : 0;
@@ -18,8 +21,12 @@ export default function Comercial() {
   // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então
   // kpi.metaMensalEquipe vem sempre 0. Os números oficiais do mês (2.724 geral, 1.498 Judit)
   // são fixos aqui — atualizar direto no código quando a meta do mês mudar.
-  const metaMensalGeral = kpi.metaMensalEquipe || 2724;
-  const metaMensalJudit = kpi.metaMensalEquipe || 1498;
+  //
+  // Supervisor logado (sessao.time definido) só vê o próprio time — mostra a fatia
+  // proporcional da meta (meta geral ÷ número de times), não a meta da empresa inteira.
+  const divisorMeta = sessao?.time ? contarTimes() : 1;
+  const metaMensalGeral = (kpi.metaMensalEquipe || 2724) / divisorMeta;
+  const metaMensalJudit = (kpi.metaMensalEquipe || 1498) / divisorMeta;
 
   const paceEquipe = calcularPaceProjecao(kpi.totalAssinados, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(assinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);

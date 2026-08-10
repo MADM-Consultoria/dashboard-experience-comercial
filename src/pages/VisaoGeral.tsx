@@ -14,10 +14,12 @@ import { calcularPaceProjecao, classificarPace } from '@/lib/diagnostico';
 import { contarDiasUteis, getPeriodoMesDoCalendario } from '@/lib/period';
 import { normalizarNome } from '@/lib/assinadosPeriodo';
 import { formatNumero, formatPct } from '@/lib/format';
-import { ehSupervisor } from '@/lib/colaboradoresAtivos';
+import { contarTimes, ehSupervisor } from '@/lib/colaboradoresAtivos';
+import { useAuth } from '@/context/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function VisaoGeral() {
+  const { sessao } = useAuth();
   const { periodoSelecionado, diasUteisTotaisMes, diasUteisDecorridos, kpi, vendaGanhaTotal, funil, alertas, colaboradores, assinadosJuditPorConsultor, loading, error } = useIntelligence();
   // "Melhor colaborador"/"Precisa de atenção" sempre olham pro MÊS INTEIRO (não um dia/intervalo
   // curto) — mas o mês em questão é o mesmo que está selecionado no calendário do topo (igual
@@ -61,8 +63,14 @@ export default function VisaoGeral() {
   // nenhum colaborador tem metaMensal individual vindo do banco. Os números oficiais do mês
   // (2.724 geral, 1.498 Judit) são fixos aqui — atualizar direto no código quando a meta do
   // mês mudar.
-  const metaMensalGeral = kpi.metaMensalEquipe || 2724;
-  const metaMensalJudit = colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0) || 1498;
+  //
+  // Supervisor logado (sessao.time definido) só vê o próprio time — a meta que faz sentido pra
+  // ele não é a da empresa inteira, é a fatia proporcional: meta geral ÷ número de times. Master
+  // (sem time restrito) continua vendo a meta cheia da empresa.
+  const numeroTimes = contarTimes();
+  const divisorMeta = sessao?.time ? numeroTimes : 1;
+  const metaMensalGeral = (kpi.metaMensalEquipe || 2724) / divisorMeta;
+  const metaMensalJudit = (colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0) || 1498) / divisorMeta;
 
   const paceEquipe = calcularPaceProjecao(totalAssinadosGeral, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(totalAssinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
