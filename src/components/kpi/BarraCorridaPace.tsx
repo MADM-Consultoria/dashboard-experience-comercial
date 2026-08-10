@@ -9,7 +9,10 @@ import { PersonagemCorredor } from './PersonagemCorredor';
  * (menos da metade), o corredor passa a andar devagar e cansado, suando — reforça visualmente
  * que tá abaixo do esperado, sem tirar os números.
  */
-const LIMIAR_PACE_CANSADO_PCT = 50.3;
+// Limiar no VALOR do pace (assinados/dia), não em % da meta: com média de 50,3/dia pra cima o
+// boneco corre; abaixo disso anda cansado. Compara arredondado em 1 casa, igual ao número
+// "Pace atual: X.X/dia" que aparece no card — o que se lê é o que decide.
+const LIMIAR_PACE_CANSADO = 50.3;
 
 export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: number; paceEsperado: number }) {
   // Chegada fixa em 100% da pista; se o pace atual já superou o esperado, o corredor encosta na
@@ -17,9 +20,7 @@ export function BarraCorridaPace({ paceAtual, paceEsperado }: { paceAtual: numbe
   const pct = paceEsperado > 0 ? Math.min(100, (paceAtual / paceEsperado) * 100) : 0;
   const naFrente = paceEsperado > 0 && paceAtual >= paceEsperado;
   const cor = naFrente ? '#22c55e' : '#2563eb';
-  // Compara arredondado em 1 casa (igual a "50.3%" que se lê a olho) — 50.3% pra cima já corre.
-  const pctArredondado = paceEsperado > 0 ? Math.round((paceAtual / paceEsperado) * 1000) / 10 : 0;
-  const cansado = paceEsperado > 0 && pctArredondado < LIMIAR_PACE_CANSADO_PCT;
+  const cansado = Math.round(paceAtual * 10) / 10 < LIMIAR_PACE_CANSADO;
 
   return (
     <div className="pt-3 border-t border-slate-100">
