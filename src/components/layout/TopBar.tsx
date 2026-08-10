@@ -70,7 +70,7 @@ export function TopBar() {
       <MobileNav />
 
       {nomeTime && (
-        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xl font-extrabold tracking-wide selo-time hidden sm:inline-block">
+        <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xl font-extrabold uppercase tracking-wide selo-time hidden sm:inline-block">
           {nomeTime}
         </span>
       )}
