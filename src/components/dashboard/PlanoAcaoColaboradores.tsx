@@ -14,7 +14,6 @@ import { STATUS_COLOR, STATUS_LABEL } from '@/lib/format';
 import type { NivelStatus } from '@/types/domain';
 import type { ColaboradorReal } from '@/lib/relatorioJudit';
 import { CollaboratorCard } from './plano-acao/CollaboratorCard';
-import { RelogioBrasilia } from './plano-acao/RelogioBrasilia';
 import { calcularClassificacao, calcularMediaEquipe } from './plano-acao/score';
 
 const STATUS_FILTROS: NivelStatus[] = ['critico', 'alerta', 'atencao', 'bom', 'excelente'];
@@ -135,7 +134,6 @@ export function PlanoAcaoColaboradores({
             <Sparkles size={16} className="text-blue-600" />
             <h3 className="text-base font-semibold text-slate-900">Plano de ação por colaborador</h3>
           </div>
-          <RelogioBrasilia />
         </div>
         <p className="text-[13px] text-slate-500">
           {precisamAtencao === 0

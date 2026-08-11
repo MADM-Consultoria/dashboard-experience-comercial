@@ -8,9 +8,9 @@ const FORMATADOR = new Intl.DateTimeFormat('pt-BR', {
   second: '2-digit',
 });
 
-/** Relógio em tempo real (fuso de Brasília) ao lado do título — contexto pro supervisor
- * entender que um score baixo logo cedo pode ser só o dia ainda não ter avançado, não
- * necessariamente desempenho ruim. */
+/** Relógio em tempo real (fuso de Brasília) — contexto pro supervisor entender que um score
+ * baixo logo cedo pode ser só o dia ainda não ter avançado, não necessariamente desempenho
+ * ruim. Fica no TopBar, embaixo do filtro de período — tom sutil (cinza), não é um alerta. */
 export function RelogioBrasilia() {
   const [hora, setHora] = useState(() => FORMATADOR.format(new Date()));
 
@@ -20,9 +20,9 @@ export function RelogioBrasilia() {
   }, []);
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-1 text-[12px] font-semibold text-red-500 tabular-nums">
-      <Clock size={12} className="text-red-500" />
-      {hora} <span className="text-red-400/80 font-normal">· Brasília</span>
+    <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 dark:text-slate-500 tabular-nums">
+      <Clock size={10} className="text-slate-400 dark:text-slate-500" />
+      {hora} · Brasília
     </span>
   );
 }
