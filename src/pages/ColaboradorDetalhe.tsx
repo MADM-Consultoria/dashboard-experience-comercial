@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
-import { ArrowLeft, Award, FileCheck2, FilePenLine, FileStack, ShieldCheck, Target, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, Award, CheckCircle2, FileCheck2, FilePenLine, FileStack, ShieldCheck, Target } from 'lucide-react';
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
@@ -175,37 +175,45 @@ export default function ColaboradorDetalhe() {
       )}
 
       {colaborador.metaMensal > 0 && pace && statusPace && (
-        <Card className="mb-6" style={{ borderLeft: `3px solid ${STATUS_COLOR[statusPace]}` }}>
-          <div className="flex items-center justify-between mb-3">
+        <Card className="mb-6">
+          <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-slate-700">Pace do mês</h3>
+              <h3 className="text-[11px] font-semibold tracking-wide text-slate-500 uppercase">Pace do mês</h3>
               <StatusPill status={statusPace} />
             </div>
+            <span className="text-[11px] text-slate-500">{diasUteisDecorridos} de {diasUteisTotaisMes} dias úteis decorridos</span>
+          </div>
+
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-3xl font-bold text-slate-900">{formatNumero(colaborador.assinados)}</span>
+            <span className="text-sm text-slate-400">/ {formatNumero(colaborador.metaMensal)} assinados</span>
+          </div>
+
+          <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-blue-600"
+              style={{ width: `${Math.min(100, colaborador.atingimentoMetaMensal)}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between mt-1 mb-1">
             <span className="text-[11px] text-slate-500">
-              {diasUteisDecorridos} de {diasUteisTotaisMes} dias úteis decorridos · meta: {formatNumero(colaborador.metaMensal)}
+              Pace atual: <strong className="text-slate-700">{pace.paceAtual.toFixed(1)}</strong>/dia · esperado: <strong className="text-slate-700">{pace.paceEsperado.toFixed(1)}</strong>/dia
             </span>
+            <span className="text-xs text-slate-500">{colaborador.atingimentoMetaMensal.toFixed(0)}%</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-[11px] text-slate-500">Pace atual</p>
-              <p className="text-base font-semibold text-slate-900">{pace.paceAtual.toFixed(2)}/dia</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500">Pace esperado</p>
-              <p className="text-base font-semibold text-slate-900">{pace.paceEsperado.toFixed(2)}/dia</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500">Projeção do mês</p>
-              <p className="text-base font-semibold text-slate-900">{formatNumero(pace.projecao)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-slate-500">Gap vs. meta</p>
-              <p className="text-base font-semibold flex items-center gap-1" style={{ color: STATUS_COLOR[statusPace] }}>
-                <TrendingUp size={14} className={pace.gap >= 0 ? '' : 'rotate-180'} />
-                {pace.gap >= 0 ? '+' : ''}{formatNumero(pace.gap)}
-              </p>
-            </div>
-          </div>
+
+          {statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico' ? (
+            <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-amber-700">
+              <AlertTriangle size={13} className="shrink-0 text-amber-500" />
+              Pace atual abaixo do esperado pra bater a meta esse mês (gap de {formatNumero(pace.gap)}).
+            </p>
+          ) : (
+            <p className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 text-[12px] text-emerald-700">
+              <CheckCircle2 size={13} className="shrink-0 text-emerald-500" />
+              Pace bom — ritmo dentro do esperado pra esse mês.
+            </p>
+          )}
+
           <p className="mt-3 text-[11px] text-slate-500">
             Pace mede <span className="font-medium text-slate-600">volume</span> de assinados vs. meta do mês; o status "
             {STATUS_LABEL[colaborador.status]}" no topo mede <span className="font-medium text-slate-600">qualidade</span> (Protocolados +
