@@ -202,8 +202,8 @@ export function criarColaboradorSintetico(ativo: ColaboradorAtivo): ColaboradorR
     assinados: 0,
     protocolados: 0,
     metaDiaria: 0,
-    // Meta oficial por colaborador: 69 assinados/mês (definida pela operação).
-    metaMensal: 69,
+    // Meta oficial por colaborador: 53 assinados/mês (definida pela operação).
+    metaMensal: 53,
     atingimentoMetaMensal: 0,
     conversaoRecebidosAssinados: 0,
     conversaoAssinadosProtocolados: 0,

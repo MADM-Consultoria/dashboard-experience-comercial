@@ -58,19 +58,20 @@ export default function VisaoGeral() {
     assinados: assinadosJuditPorConsultor.get(normalizarNome(c.nome)) ?? 0,
   }));
 
-  // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então
-  // os números oficiais do mês (2.724 geral, 1.498 Judit) são fixos aqui — atualizar direto no
-  // código quando a meta do mês mudar. NÃO somar o metaMensal individual dos colaboradores
-  // (69/mês cada, ver criarColaboradorSintetico) pra chegar nesse total — são metas com
-  // propósitos diferentes (individual vs. meta oficial do time) e não precisam bater.
+  // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então os
+  // números oficiais do mês (2.724 geral, 1.498 Judit) ficam direto no código — atualizar aqui
+  // quando a meta do mês mudar. NÃO usar kpi.metaMensalEquipe: esse campo soma o metaMensal
+  // individual de cada colaborador (53/mês cada, ver criarColaboradorSintetico), que é uma meta
+  // com propósito diferente (individual, não a meta oficial do time) — usar como fallback aqui
+  // já deu número errado (53 × colaboradores ≠ 2.724/1.498).
   //
   // Supervisor logado (sessao.time definido) só vê o próprio time — a meta que faz sentido pra
   // ele não é a da empresa inteira, é a fatia proporcional: meta geral ÷ número de times. Master
   // (sem time restrito) continua vendo a meta cheia da empresa.
   const numeroTimes = contarTimes();
   const divisorMeta = sessao?.time ? numeroTimes : 1;
-  const metaMensalGeral = (kpi.metaMensalEquipe || 2724) / divisorMeta;
-  const metaMensalJudit = (kpi.metaMensalEquipe || 1498) / divisorMeta;
+  const metaMensalGeral = 2724 / divisorMeta;
+  const metaMensalJudit = 1498 / divisorMeta;
 
   const paceEquipe = calcularPaceProjecao(totalAssinadosGeral, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(totalAssinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
