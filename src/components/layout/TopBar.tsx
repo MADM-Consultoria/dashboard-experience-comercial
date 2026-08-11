@@ -3,7 +3,6 @@ import { Bell, RefreshCw } from 'lucide-react';
 import { CalendarioSelector } from './CalendarioSelector';
 import { MobileNav } from './MobileNav';
 import { UserMenu } from './UserMenu';
-import { RelogioBrasilia } from '@/components/dashboard/plano-acao/RelogioBrasilia';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { useAutoRefreshCountdown } from '@/context/AutoRefreshContext';
 import { useAuth } from '@/context/AuthContext';
@@ -67,7 +66,7 @@ export function TopBar() {
   const nomeTime = useNomeTimeSupervisor();
 
   return (
-    <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 bg-[#f8fafc]/85 dark:bg-slate-900/85 backdrop-blur px-4 py-2 lg:px-8">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-700 bg-[#f8fafc]/85 dark:bg-slate-900/85 backdrop-blur px-4 lg:px-8">
       <MobileNav />
 
       {nomeTime && (
@@ -77,10 +76,7 @@ export function TopBar() {
       )}
 
       <div className="flex items-center gap-3 ml-auto">
-        <div className="flex flex-col items-end gap-2.5">
-          <CalendarioSelector />
-          <RelogioBrasilia />
-        </div>
+        <CalendarioSelector />
 
         <BotaoAtualizar />
 
