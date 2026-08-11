@@ -40,7 +40,6 @@ export default function VisaoGeral() {
   // "Geral · Assinados" é o total real da empresa inteira (Discadora + Judit
   // somados) — Judit é um recorte por canal que já está incluído dentro
   // desse total, não um valor à parte.
-  const colaboradoresJudit = colaboradores.filter((c) => c.canal === 'Judit');
   // Médias de desempenho (radar) olham só pra quem está ativo — incluir gente desligada
   // (com métricas do período zeradas) puxaria a média da equipe artificialmente pra baixo.
   const colaboradoresAtivos = colaboradores.filter((c) => c.ativo && !ehSupervisor(c.nome) && !c.cargo.toLowerCase().includes('supervisor'));
@@ -60,9 +59,10 @@ export default function VisaoGeral() {
   }));
 
   // METAS FIXAS: madm.view_relatorio_judit não é mais usada (decisão da operação), então
-  // nenhum colaborador tem metaMensal individual vindo do banco. Os números oficiais do mês
-  // (2.724 geral, 1.498 Judit) são fixos aqui — atualizar direto no código quando a meta do
-  // mês mudar.
+  // os números oficiais do mês (2.724 geral, 1.498 Judit) são fixos aqui — atualizar direto no
+  // código quando a meta do mês mudar. NÃO somar o metaMensal individual dos colaboradores
+  // (69/mês cada, ver criarColaboradorSintetico) pra chegar nesse total — são metas com
+  // propósitos diferentes (individual vs. meta oficial do time) e não precisam bater.
   //
   // Supervisor logado (sessao.time definido) só vê o próprio time — a meta que faz sentido pra
   // ele não é a da empresa inteira, é a fatia proporcional: meta geral ÷ número de times. Master
@@ -70,7 +70,7 @@ export default function VisaoGeral() {
   const numeroTimes = contarTimes();
   const divisorMeta = sessao?.time ? numeroTimes : 1;
   const metaMensalGeral = (kpi.metaMensalEquipe || 2724) / divisorMeta;
-  const metaMensalJudit = (colaboradoresJudit.reduce((a, c) => a + c.metaMensal, 0) || 1498) / divisorMeta;
+  const metaMensalJudit = (kpi.metaMensalEquipe || 1498) / divisorMeta;
 
   const paceEquipe = calcularPaceProjecao(totalAssinadosGeral, metaMensalGeral, diasUteisDecorridos, diasUteisTotaisMes);
   const paceJudit = calcularPaceProjecao(totalAssinadosJudit, metaMensalJudit, diasUteisDecorridos, diasUteisTotaisMes);
