@@ -3,6 +3,7 @@ import { Bell, RefreshCw } from 'lucide-react';
 import { CalendarioSelector } from './CalendarioSelector';
 import { MobileNav } from './MobileNav';
 import { UserMenu } from './UserMenu';
+import { RelogioBrasilia } from '@/components/dashboard/plano-acao/RelogioBrasilia';
 import { useIntelligence } from '@/lib/useIntelligence';
 import { useAutoRefreshCountdown } from '@/context/AutoRefreshContext';
 import { useAuth } from '@/context/AuthContext';
@@ -76,6 +77,8 @@ export function TopBar() {
       )}
 
       <div className="flex items-center gap-3 ml-auto">
+        <RelogioBrasilia />
+
         <CalendarioSelector />
 
         <BotaoAtualizar />
