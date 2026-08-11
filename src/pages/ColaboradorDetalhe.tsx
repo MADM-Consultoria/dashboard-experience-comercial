@@ -189,17 +189,11 @@ export default function ColaboradorDetalhe() {
             <span className="text-sm text-slate-400">/ {formatNumero(colaborador.metaMensal)} assinados</span>
           </div>
 
-          <div className="mt-3 h-2 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-600"
-              style={{ width: `${Math.min(100, colaborador.atingimentoMetaMensal)}%` }}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-1 mb-1">
+          <div className="flex items-center justify-between mt-2 mb-1">
             <span className="text-[11px] text-slate-500">
               Pace atual: <strong className="text-slate-700">{pace.paceAtual.toFixed(1)}</strong>/dia · esperado: <strong className="text-slate-700">{pace.paceEsperado.toFixed(1)}</strong>/dia
             </span>
-            <span className="text-xs text-slate-500">{colaborador.atingimentoMetaMensal.toFixed(0)}%</span>
+            <span className="text-xs text-slate-500">{colaborador.atingimentoMetaMensal.toFixed(0)}% da meta</span>
           </div>
 
           {statusPace === 'atencao' || statusPace === 'alerta' || statusPace === 'critico' ? (
