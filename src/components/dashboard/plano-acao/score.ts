@@ -137,27 +137,27 @@ function diagnosticoCombinado(c: ColaboradorReal, media: MediaEquipe): string | 
 
   // Recebeu pouco, mas mesmo assim assina bem — o problema está em protocolar, não em vender.
   if (nivelRecebidos === 'baixo' && nivelAssinados !== 'baixo' && nivelProtocolados === 'baixo') {
-    return `Recebeu só ${formatNumero(c.recebidos)} leads (média da equipe é ${media.recebidos.toFixed(1)}), mas mesmo com pouco volume assinou bem (${formatNumero(c.assinados)}). O gargalo real está em protocolar: só ${formatNumero(c.protocolados)} protocolado(s) até agora. Priorizar o protocolo dos casos já assinados antes de pedir mais leads pra essa pessoa.`;
+    return `Poucos leads (${formatNumero(c.recebidos)}, méd. ${media.recebidos.toFixed(1)}) mas assina bem (${formatNumero(c.assinados)}). Gargalo: só ${formatNumero(c.protocolados)} protocolado(s) — priorizar isso.`;
   }
 
   // Recebeu muito lead, mas converte pouco em assinatura — e o pouco que assina, protocola bem.
   if (nivelRecebidos === 'alto' && nivelAssinados === 'baixo' && nivelProtocolados !== 'baixo') {
-    return `Recebeu bastante lead (${formatNumero(c.recebidos)}, acima da média de ${media.recebidos.toFixed(1)} da equipe), mas converteu pouco em assinatura (${formatNumero(c.assinados)}). O que assina, no entanto, quase sempre vira protocolo (${formatNumero(c.protocolados)}) — a execução depois da venda está boa, o problema é a conversão do lead em contrato. Revisar a abordagem comercial, não a carga de leads.`;
+    return `Lead alto (${formatNumero(c.recebidos)}, méd. ${media.recebidos.toFixed(1)}) mas converte pouco (${formatNumero(c.assinados)} assinados). Protocola bem (${formatNumero(c.protocolados)}) — revisar abordagem, não a carga de leads.`;
   }
 
   // Assina bem (ou acima da meta), mas protocola muito abaixo da equipe — funil represado.
   if (nivelAssinados !== 'baixo' && nivelProtocolados === 'baixo') {
-    return `Assinou ${formatNumero(c.assinados)} — dentro ou acima do esperado —, mas protocolou só ${formatNumero(c.protocolados)}, bem abaixo da média da equipe (${media.protocolados.toFixed(1)}). O funil está represado na etapa de protocolo, não na de vendas. Separar um bloco de tempo essa semana só pra colocar os casos assinados em dia.`;
+    return `Assinou bem (${formatNumero(c.assinados)}) mas protocolou só ${formatNumero(c.protocolados)} (méd. ${media.protocolados.toFixed(1)}) — funil represado no protocolo. Reservar tempo essa semana pra colocar em dia.`;
   }
 
   // Assina pouco, mas o pouco que assina vira protocolo acima da média — execução ótima, falta volume.
   if (nivelAssinados === 'baixo' && nivelProtocolados === 'alto') {
-    return `Assinou pouco (${formatNumero(c.assinados)}, abaixo da meta), mas o que assina protocola quase todo — ${formatNumero(c.protocolados)} protocolados, acima da média da equipe (${media.protocolados.toFixed(1)}). A execução depois da assinatura está ótima; o problema é volume de entrada. Avaliar se falta lead na carteira ou se é ritmo de abordagem.`;
+    return `Assina pouco (${formatNumero(c.assinados)}) mas protocola quase tudo (${formatNumero(c.protocolados)}, acima da méd. ${media.protocolados.toFixed(1)}) — falta volume, não execução. Avaliar lead na carteira.`;
   }
 
   // Recebeu pouco lead E assina pouco — problema pode não ser do colaborador, é distribuição.
   if (nivelRecebidos === 'baixo' && nivelAssinados === 'baixo' && nivelProtocolados !== 'baixo') {
-    return `Recebeu só ${formatNumero(c.recebidos)} leads no período (média da equipe é ${media.recebidos.toFixed(1)}) — o volume baixo de assinados (${formatNumero(c.assinados)}) pode ser reflexo direto disso, não de desempenho: o que assina, protocola bem (${formatNumero(c.protocolados)}). Avaliar redistribuição de carteira antes de cobrar volume.`;
+    return `Poucos leads (${formatNumero(c.recebidos)}, méd. ${media.recebidos.toFixed(1)}) explicam o baixo volume (${formatNumero(c.assinados)} assinados); protocola bem (${formatNumero(c.protocolados)}). Avaliar redistribuição de carteira.`;
   }
 
   return null;
@@ -181,21 +181,21 @@ function escolherPor(id: string, opcoes: string[]): string {
  */
 function complementoZerouBandaBoa(c: ColaboradorReal, media: MediaEquipe): string {
   if (c.protocolados === 0) {
-    return ' Também não protocolou nada esse mês — vale conferir os dois pontos na mesma conversa.';
+    return ' Também zerou protocolados — conferir os dois juntos.';
   }
   if (c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5) {
-    return ` A conversão geral também está baixa (${formatPct(c.conversaoRecebidosAssinados, 1)}), então talvez não seja só uma interrupção pontual.`;
+    return ` Conversão também baixa (${formatPct(c.conversaoRecebidosAssinados, 1)}) — pode não ser só pontual.`;
   }
   if (c.conversaoRecebidosAssinados > 20) {
-    return ` A conversão geral segue alta (${formatPct(c.conversaoRecebidosAssinados, 1)}), o que reforça que deve ser mesmo só uma interrupção pontual.`;
+    return ` Conversão segue alta (${formatPct(c.conversaoRecebidosAssinados, 1)}) — reforça que é pontual.`;
   }
   if (media.recebidos > 0 && c.recebidos < media.recebidos * 0.5) {
-    return ` Também recebeu poucos leads esse mês (${formatNumero(c.recebidos)}, bem abaixo da média da equipe) — pode ser parte da explicação.`;
+    return ` Também recebeu poucos leads (${formatNumero(c.recebidos)}) — pode explicar.`;
   }
   return escolherPor(c.id, [
-    ' Vale só confirmar se é uma interrupção pontual (férias, mudança de carteira) antes de virar uma queda de verdade.',
-    ' Sem nenhum outro número fora do lugar — provavelmente é só uma interrupção pontual; uma conversa rápida já tira a dúvida.',
-    ' O resto dos números segue normal, então é mais provável que seja algo pontual do que uma queda real.',
+    ' Confirmar se é pontual (férias, mudança de carteira).',
+    ' Nada mais fora do lugar — provável ser pontual.',
+    ' Resto normal — mais provável ser algo pontual.',
   ]);
 }
 
@@ -224,24 +224,24 @@ export function gerarRecomendacoesIA(
     recomendacoes.push(diagnostico);
   } else if (c.assinados > 0 && c.protocolados === 0) {
     recomendacoes.push(
-      `${formatNumero(c.assinados)} contrato${c.assinados === 1 ? '' : 's'} assinado${c.assinados === 1 ? '' : 's'} e nenhum protocolado ainda. Separar um horário hoje só pra protocolar esses casos antes de captar mais leads.`,
+      `${formatNumero(c.assinados)} assinado(s), 0 protocolado. Separar horário hoje pra protocolar antes de captar mais leads.`,
     );
   } else if (media.protocolados > 0 && c.protocolados > 0 && c.protocolados < media.protocolados * 0.5) {
     recomendacoes.push(
-      `Protocolou ${formatNumero(c.protocolados)}, menos da metade da média da equipe (${media.protocolados.toFixed(1)}). Checar com o colaborador o que está travando o fechamento dos casos já assinados.`,
+      `Protocolou ${formatNumero(c.protocolados)}, menos da metade da média (${media.protocolados.toFixed(1)}). Checar o que trava o fechamento.`,
     );
   }
 
   if (c.conversaoRecebidosAssinados < 5 && c.recebidos >= 5) {
     recomendacoes.push(
-      `Converteu só ${formatPct(c.conversaoRecebidosAssinados, 1)} dos ${formatNumero(c.recebidos)} recebidos em assinados (${formatNumero(c.assinados)} no total) — abaixo do mínimo saudável de 5%. Revisar a abordagem comercial nos leads que já tem em mãos antes de pedir mais volume.`,
+      `Conversão de ${formatPct(c.conversaoRecebidosAssinados, 1)} (${formatNumero(c.recebidos)} leads → ${formatNumero(c.assinados)} assinados), abaixo do mínimo (5%). Revisar abordagem nos leads em mãos.`,
     );
   }
 
   if (media.mediaDia > 0 && mediaDia < media.mediaDia * 0.7) {
     const percentAbaixo = Math.round(100 - (mediaDia / media.mediaDia) * 100);
     recomendacoes.push(
-      `Ritmo de ${mediaDia.toFixed(1)} assinados/dia, ${percentAbaixo}% abaixo da média da equipe (${media.mediaDia.toFixed(1)}/dia). Avaliar se falta volume de leads na carteira ou se é abordagem — conversar antes do fim da semana.`,
+      `Ritmo de ${mediaDia.toFixed(1)}/dia, ${percentAbaixo}% abaixo da média (${media.mediaDia.toFixed(1)}/dia). Conversar até o fim da semana.`,
     );
   }
 
@@ -258,31 +258,31 @@ export function gerarRecomendacoesIA(
       // Classificação ainda boa mas zerou de vez — provavelmente interrupção pontual (férias, licença,
       // trocou de carteira), não desempenho ruim. O complemento busca algo real que distinga
       // esse caso do de outra pessoa na mesma situação, em vez de repetir a mesma frase.
-      mensagem = `Vinha de ${antes} assinado(s) na 1ª metade do mês e zerou na 2ª — mas a classificação ainda está em ${BANDA_LABEL[banda].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
+      mensagem = `Zerou na 2ª metade (vinha de ${antes}). Classificação ainda ${BANDA_LABEL[banda].toLowerCase()}.${complementoZerouBandaBoa(c, media)}`;
     } else if (zerou) {
-      mensagem = `Zerou os assinados na 2ª metade do mês depois de ${antes} na 1ª. Conversa individual essa semana pra entender a causa antes que o mês feche assim.`;
+      mensagem = `Zerou os assinados na 2ª metade (vinha de ${antes}). Conversa essa semana antes que o mês feche assim.`;
     } else if (quedaPct >= 50) {
-      mensagem = `Caiu ${quedaPct}% nos assinados — de ${antes} na 1ª metade do mês pra ${depois} na 2ª. Queda grande o bastante pra tratar como prioridade, não só acompanhar.`;
+      mensagem = `Caiu ${quedaPct}% nos assinados (${antes} → ${depois}, 1ª → 2ª metade). Prioridade, não só acompanhamento.`;
     } else {
-      mensagem = `Ritmo caiu ${quedaPct}% ao longo do mês (${antes} → ${depois} assinados, 1ª pra 2ª metade). Ainda dá pra reverter com um ajuste simples — vale uma conversa rápida pra identificar o que mudou.`;
+      mensagem = `Ritmo caiu ${quedaPct}% no mês (${antes} → ${depois} assinados). Ajuste simples pode reverter — vale conversa rápida.`;
     }
     recomendacoes.push(mensagem);
   }
 
   if (c.metaMensal > 0 && c.atingimentoMetaMensal < 50) {
     recomendacoes.push(
-      `Bateu só ${formatPct(c.atingimentoMetaMensal, 0)} da meta mensal (${formatNumero(c.assinados)} de ${formatNumero(c.metaMensal)}). Definir com o colaborador um plano de recuperação com metas semanais menores.`,
+      `Bateu só ${formatPct(c.atingimentoMetaMensal, 0)} da meta (${formatNumero(c.assinados)} de ${formatNumero(c.metaMensal)}). Definir plano de recuperação com metas semanais menores.`,
     );
   }
 
   if (banda === 'excelente') {
     recomendacoes.push(
-      `${formatPct(c.conversaoRecebidosAssinados, 1)} de conversão e ${formatNumero(c.assinados)} assinados no período — desempenho de destaque. Reconhecer publicamente e usar como exemplo de abordagem com a equipe.`,
+      `${formatPct(c.conversaoRecebidosAssinados, 1)} de conversão, ${formatNumero(c.assinados)} assinados — destaque. Reconhecer e usar de exemplo com a equipe.`,
     );
   }
 
   if (recomendacoes.length === 0) {
-    recomendacoes.push('Sem pontos críticos no momento — manter o acompanhamento de rotina.');
+    recomendacoes.push('Sem pontos críticos — manter o acompanhamento de rotina.');
   }
   return recomendacoes;
 }
