@@ -12,10 +12,11 @@
  * contra-fase às pernas, bounce vertical no corpo, sombra que respira e rastro de vento.
  * Puramente decorativo (aria-hidden) — quem lê a barra é o texto ao redor.
  *
- * `cansado`: quando o pace está muito abaixo do esperado (ver BarraCorridaPace.tsx), troca pro
- * conjunto de classes "--cansado" (definidas em index.css) — passada bem mais lenta e curta,
- * quase andando, sem o rastro de velocidade, e com uma gota de suor na testa pingando. É o
- * mesmo sinal visual que "pace ruim" já dava por cor, só que também no jeito de correr.
+ * `estado`: 3 níveis conforme o pace (ver BarraCorridaPace.tsx) — "correndo" (padrão) é o sprint
+ * normal; "andando" é passada rápida mas sem ser corrida (pace mediano, sem suor, sem rastro de
+ * velocidade); "cansado" é passada bem mais lenta e curta, com gota de suor pingando na testa.
+ * Cada nível usa seu próprio conjunto de classes CSS (--andando / --cansado, definidas em
+ * index.css) — o mesmo sinal visual que "pace ruim" já dava por cor, só que também no passo.
  *
  * Estrutura de cada membro: <g posição-via-atributo-svg><g className="rotação-via-css">forma.
  * O CSS `transform` da animação substituiria (não somaria com) o transform do atributo no
@@ -73,12 +74,14 @@ function Braco({ cor, tras }: { cor: string; tras?: boolean }) {
   );
 }
 
-export function PersonagemCorredor({ cor, cansado }: { cor: string; cansado?: boolean }) {
-  const sufixo = cansado ? '--cansado' : '';
+export type EstadoCorredor = 'correndo' | 'andando' | 'cansado';
+
+export function PersonagemCorredor({ cor, estado = 'correndo' }: { cor: string; estado?: EstadoCorredor }) {
+  const sufixo = estado === 'correndo' ? '' : `--${estado}`;
   return (
     <svg width="34" height="40" viewBox="0 0 44 52" aria-hidden="true" style={{ overflow: 'visible' }}>
-      {/* rastro de velocidade — some quando tá cansado (andando, não correndo, não faz sentido ter linha de velocidade) */}
-      {!cansado && (
+      {/* rastro de velocidade — só faz sentido correndo de verdade, some andando (rápido ou cansado) */}
+      {estado === 'correndo' && (
         <g stroke={cor} strokeWidth="1.6" strokeLinecap="round" fill="none">
           <line className="pc-vento pc-vento--1" x1="2" y1="18" x2="10" y2="18" />
           <line className="pc-vento pc-vento--2" x1="0" y1="25" x2="9" y2="25" />
@@ -89,8 +92,8 @@ export function PersonagemCorredor({ cor, cansado }: { cor: string; cansado?: bo
       {/* sombra no chão — respira em contra-fase ao bounce do corpo */}
       <ellipse className={`pc-sombra pc-sombra${sufixo}`} cx="22" cy="49" rx="9" ry="2.2" fill="#0f172a" opacity="0.15" />
 
-      {/* gota de suor pingando da testa — só quando cansado */}
-      {cansado && (
+      {/* gota de suor pingando da testa — só no estado cansado */}
+      {estado === 'cansado' && (
         <g transform="translate(28.5 5)">
           <path className="pc-suor" d="M 0 0 C -1.4 1.6, -1.4 3.2, 0 3.2 C 1.4 3.2, 1.4 1.6, 0 0 Z" fill="#38bdf8" />
         </g>

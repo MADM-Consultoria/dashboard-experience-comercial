@@ -1,33 +1,52 @@
-import { PersonagemCorredor } from './PersonagemCorredor';
+import { PersonagemCorredor, type EstadoCorredor } from './PersonagemCorredor';
 
 /**
  * Pace atual x pace esperado como uma corrida: o personagem corre até onde o ritmo atual está,
  * a linha de chegada é o pace esperado. Mesmos dois números que já apareciam como texto — só
  * que visual, pra bater o olho na hora se o ritmo tá na frente ou atrás sem ler número nenhum.
  * O corredor sempre corre pra direita, em direção à bandeira — só a cor muda (azul atrás do
- * ritmo, verde quando alcança ou passa a meta). Quando o pace tá muito abaixo do esperado
- * (abaixo do limiar), o corredor passa a andar devagar e cansado, suando — reforça visualmente
- * que tá abaixo do esperado, sem tirar os números.
+ * ritmo, verde quando alcança ou passa a meta). O passo tem 3 níveis conforme o pace: correndo
+ * (pace bom), andando rápido (pace mediano) e andando cansado/suando (pace muito abaixo) — sem
+ * tirar os números.
  */
-// Limiar no VALOR do pace (assinados/dia), não em % da meta: com média no limiar ou acima o
-// boneco corre; abaixo disso anda cansado. Compara arredondado em 1 casa, igual ao número
-// "Pace atual: X.X/dia" que aparece no card — o que se lê é o que decide. Cada card passa o
-// seu limiar (Geral 50,3; Judit 25,0 — meta menor, pace/dia naturalmente menor).
-const LIMIAR_PACE_CANSADO_PADRAO = 50.3;
+// Limiares no VALOR do pace (assinados/dia), não em % da meta — comparação arredondada em 1
+// casa, igual ao número "Pace atual: X.X/dia" que aparece no card. No limiar de corrida ou
+// acima o boneco corre; entre os dois limiares anda rápido; abaixo do de andar, anda cansado.
+// Cada card passa o seu limiar de corrida (Geral 50, Judit 25 — meta menor, pace/dia menor); o
+// limiar de andar rápido é proporcional (mesma razão ~0,77 usada no card Geral: 38,5/50).
+const LIMIAR_CORRIDA_PADRAO = 50;
+const RAZAO_LIMIAR_ANDANDO = 38.5 / 50;
+
+function calcularEstadoCorredor(paceAtual: number, limiarCorrida: number, limiarAndando: number): EstadoCorredor {
+  const pace = Math.round(paceAtual * 10) / 10;
+  if (pace >= limiarCorrida) return 'correndo';
+  if (pace >= limiarAndando) return 'andando';
+  return 'cansado';
+}
 
 /** Mesmo critério do boneco, exportado pro card decidir qual mensagem mostrar (aviso de pace
  * baixo vs pace bom) — um único limiar decide animação E texto, nunca desencontrados. */
-export function paceEstaCansado(paceAtual: number, limiarCorrida: number = LIMIAR_PACE_CANSADO_PADRAO): boolean {
+export function paceEstaCansado(paceAtual: number, limiarCorrida: number = LIMIAR_CORRIDA_PADRAO): boolean {
   return Math.round(paceAtual * 10) / 10 < limiarCorrida;
 }
 
-export function BarraCorridaPace({ paceAtual, paceEsperado, limiarCorrida = LIMIAR_PACE_CANSADO_PADRAO }: { paceAtual: number; paceEsperado: number; limiarCorrida?: number }) {
+export function BarraCorridaPace({
+  paceAtual,
+  paceEsperado,
+  limiarCorrida = LIMIAR_CORRIDA_PADRAO,
+  limiarAndando = limiarCorrida * RAZAO_LIMIAR_ANDANDO,
+}: {
+  paceAtual: number;
+  paceEsperado: number;
+  limiarCorrida?: number;
+  limiarAndando?: number;
+}) {
   // Chegada fixa em 100% da pista; se o pace atual já superou o esperado, o corredor encosta na
   // bandeira em vez de estourar pra fora da pista — "passou da meta" já fica claro pela cor.
   const pct = paceEsperado > 0 ? Math.min(100, (paceAtual / paceEsperado) * 100) : 0;
   const naFrente = paceEsperado > 0 && paceAtual >= paceEsperado;
   const cor = naFrente ? '#22c55e' : '#2563eb';
-  const cansado = paceEstaCansado(paceAtual, limiarCorrida);
+  const estado = calcularEstadoCorredor(paceAtual, limiarCorrida, limiarAndando);
 
   return (
     <div className="pt-3 border-t border-slate-100">
@@ -42,7 +61,7 @@ export function BarraCorridaPace({ paceAtual, paceEsperado, limiarCorrida = LIMI
           className="absolute transition-[left] duration-700 ease-out motion-reduce:transition-none"
           style={{ left: `${pct}%`, transform: 'translateX(-55%)', top: 0 }}
         >
-          <PersonagemCorredor cor={cor} cansado={cansado} />
+          <PersonagemCorredor cor={cor} estado={estado} />
         </div>
 
         <div className="h-2 rounded-full bg-slate-100 overflow-hidden">

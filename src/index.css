@@ -146,6 +146,49 @@ body {
 .pc-vento--2         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -3); }
 .pc-vento--3         { animation: pcVento calc(var(--pc-duracao) * 1.4) linear infinite; animation-delay: calc(var(--pc-duracao) / -1.6); }
 
+/* Estado "andando" — pace mediano (nem tão baixo quanto o "cansado", nem já correndo). Passo
+ * apressado: mais rápido e com mais amplitude que o "cansado", mas ainda sem virar corrida —
+ * sem gota de suor, sem rastro de velocidade. Duração e amplitude ficam entre os dois extremos
+ * (corrida e cansado). */
+:root {
+  --pc-duracao-andando: 0.75s;
+}
+
+@keyframes pcCoxaAndando {
+  0%   { transform: rotate(-32deg); }
+  50%  { transform: rotate(24deg); }
+  100% { transform: rotate(-32deg); }
+}
+@keyframes pcCanelaAndando {
+  0%   { transform: rotate(4deg); }
+  38%  { transform: rotate(22deg); }
+  62%  { transform: rotate(42deg); }
+  85%  { transform: rotate(68deg); }
+  100% { transform: rotate(4deg); }
+}
+@keyframes pcBracoAndando {
+  0%   { transform: rotate(-22deg); }
+  50%  { transform: rotate(18deg); }
+  100% { transform: rotate(-22deg); }
+}
+@keyframes pcCorpoAndando {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-1.5px); }
+}
+@keyframes pcSombraAndando {
+  0%, 100% { transform: scaleX(1); opacity: 0.15; }
+  50%      { transform: scaleX(0.85); opacity: 0.12; }
+}
+
+.pc-quadril--frente--andando { animation: pcCoxaAndando var(--pc-duracao-andando) ease-in-out infinite; }
+.pc-quadril--tras--andando   { animation: pcCoxaAndando var(--pc-duracao-andando) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-andando) / -2); }
+.pc-joelho--frente--andando   { animation: pcCanelaAndando var(--pc-duracao-andando) ease-in-out infinite; }
+.pc-joelho--tras--andando     { animation: pcCanelaAndando var(--pc-duracao-andando) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-andando) / -2); }
+.pc-ombro--frente--andando    { animation: pcBracoAndando var(--pc-duracao-andando) ease-in-out infinite; animation-delay: calc(var(--pc-duracao-andando) / -2); }
+.pc-ombro--tras--andando      { animation: pcBracoAndando var(--pc-duracao-andando) ease-in-out infinite; }
+.pc-corpo--andando            { animation: pcCorpoAndando calc(var(--pc-duracao-andando) / 2) ease-in-out infinite; }
+.pc-sombra--andando           { animation: pcSombraAndando calc(var(--pc-duracao-andando) / 2) ease-in-out infinite; transform-origin: 22px 49px; }
+
 /* Estado "cansado" — pace muito abaixo do esperado (ver BarraCorridaPace.tsx): passada bem
  * mais lenta e bem mais curta (quase andando, não correndo), sem o rastro de velocidade (já
  * escondido no componente), com uma gota de suor pingando. Mesma lógica de delay oposto entre
@@ -200,6 +243,8 @@ body {
   .pc-quadril--frente, .pc-quadril--tras, .pc-joelho--frente, .pc-joelho--tras,
   .pc-ombro--frente, .pc-ombro--tras, .pc-corpo, .pc-sombra,
   .pc-vento--1, .pc-vento--2, .pc-vento--3,
+  .pc-quadril--frente--andando, .pc-quadril--tras--andando, .pc-joelho--frente--andando, .pc-joelho--tras--andando,
+  .pc-ombro--frente--andando, .pc-ombro--tras--andando, .pc-corpo--andando, .pc-sombra--andando,
   .pc-quadril--frente--cansado, .pc-quadril--tras--cansado, .pc-joelho--frente--cansado, .pc-joelho--tras--cansado,
   .pc-ombro--frente--cansado, .pc-ombro--tras--cansado, .pc-corpo--cansado, .pc-sombra--cansado, .pc-suor {
     animation: none;
